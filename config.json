@@ -1,0 +1,10 @@
+{
+    "trade_book_size": 50,
+    "leverage_min": 1,
+    "leverage_max": 100,
+    "taker_fee": 0.0004,
+    "maker_fee": 0.0,
+    "maintainence_margin": 0.005,
+    "interest_rate": 0.0001,
+    "funding_interval": 28800000
+}

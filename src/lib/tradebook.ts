@@ -1,6 +1,5 @@
 
 import { Side } from "./orderbook"
-import data from "@common/config.json"
 
 
 export interface Trade{

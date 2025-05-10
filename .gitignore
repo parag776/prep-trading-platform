@@ -1,9 +1,9 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/frontend/node_modules
-/frontend/.pnp
-/frontend/.swc/
+/node_modules
+/.pnp
+/.swc/
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -12,14 +12,14 @@
 !.yarn/versions
 
 # testing
-/frontend/coverage
+/coverage
 
 # next.js
-/frontend/.next/
-/frontend/out/
+/.next/
+/out/
 
 # production
-/frontend/build
+/build
 
 # misc
 .DS_Store
@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#prisma 
+generated/prisma
