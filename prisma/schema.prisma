@@ -14,3 +14,126 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// enums
+enum Order_Type {
+  LIMIT
+  MARKET
+}
+
+enum Order_Status {
+  OPEN
+  FILLED
+  PARTIALLY_FILLED
+  CANCELLED
+}
+
+enum Side {
+  ASK
+  BID
+}
+
+enum Symbol {
+  SOL
+  BTC
+  BNB
+  ETH
+  XRP
+}
+
+enum Timeframe {
+  ONE_MINUTE
+  THREE_MINUTE
+  FIVE_MINUTE
+  FIFTEEN_MINUTE
+  THIRTY_MINUTE
+  ONE_HOUR
+  TWO_HOUR
+  FOUR_HOUR
+  SIX_HOUR
+  EIGHT_HOUR
+  TWELVE_HOUR
+  ONE_DAY
+  THREE_DAY
+  ONE_WEEK
+  ONE_MONTH
+}
+
+// models
+model User {
+  id               String     @id @default(uuid())
+  email            String  @unique
+  name             String
+  password         String?
+  usdc             Int     @default(0)
+  available_margin Int     @default(0)
+  bought             Trade[] @relation("bought")
+  sold               Trade[] @relation("sold")
+  orders Order[]
+  positions Position[]
+}
+
+model Trade {
+  id         Int      @id @default(autoincrement())
+  fromUserId String
+  toUserId   String
+  price      Int
+  quantity   Int
+  symbol Symbol
+  buyer       User     @relation(name: "bought", fields: [fromUserId], references: [id])
+  seller      User     @relation(name: "sold", fields: [toUserId], references: [id])
+  createdAt  DateTime @default(now())
+
+  // @@index([createdAt])  // but won't need because only useful incase of crash. at that time, just go through whole table.
+
+}
+
+// orderbook can be extracted from here open orders.
+model Order {
+  id    Int     @id @default(autoincrement())
+  type Order_Type
+  status Order_Status
+  price Int?
+  quantity Int
+  Symbol Symbol
+  userId String
+  leverage Int
+  side String
+  createdAt DateTime @default(now())
+
+  @@index([userId, status, Symbol])
+  // @@index(type: Hash, [status]) // for getting the order book. // but won't need because only useful incase of crash. at that time, just go through whole table.
+  user User @relation(fields: [userId], references: [id])
+}
+
+
+model Position{
+  id String @id @default(uuid())
+  userId String
+  Symbol Symbol
+  side Side
+  average_price Int
+  quantity Int
+  leverage Int
+  createdAt DateTime @default(now())
+
+  @@index([userId, Symbol])
+  user User @relation(fields: [userId], references: [id])
+}
+
+// todo create order history. don't need position history.
+// in order history, only show filled and canceled orders.
+
+model Historical_Data{
+  symbol Symbol
+  timeframe Timeframe
+  timestamp DateTime
+  open Int
+  high Int
+  low Int
+  close Int
+  volume Int
+  @@id([symbol, timeframe, timestamp])
+} 
+
+
+// create history, add margins to user, etc. sleep for 20 minutes
