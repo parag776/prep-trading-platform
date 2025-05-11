@@ -32,14 +32,6 @@ enum Side {
   BID
 }
 
-enum Symbol {
-  SOL
-  BTC
-  BNB
-  ETH
-  XRP
-}
-
 enum Timeframe {
   ONE_MINUTE
   THREE_MINUTE
@@ -59,81 +51,98 @@ enum Timeframe {
 }
 
 // models
+
+model Asset {
+  id              String            @id @default(uuid())
+  symbol          String
+  name            String
+  img_url         String
+  trades          Trade[]
+  orders          Order[]
+  positions       Position[]
+  historical_data Historical_Data[]
+}
+
 model User {
   id               String     @id @default(uuid())
-  email            String  @unique
+  email            String     @unique
   name             String
   password         String?
-  usdc             Int     @default(0)
-  available_margin Int     @default(0)
-  bought             Trade[] @relation("bought")
-  sold               Trade[] @relation("sold")
-  orders Order[]
-  positions Position[]
+  usdc             Int        @default(0)
+  available_margin Int        @default(0)
+  bought           Trade[]    @relation("bought")
+  sold             Trade[]    @relation("sold")
+  orders           Order[]
+  positions        Position[]
 }
 
 model Trade {
-  id         Int      @id @default(autoincrement())
+  id         Int    @id @default(autoincrement())
   fromUserId String
   toUserId   String
   price      Int
   quantity   Int
-  symbol Symbol
-  buyer       User     @relation(name: "bought", fields: [fromUserId], references: [id])
-  seller      User     @relation(name: "sold", fields: [toUserId], references: [id])
-  createdAt  DateTime @default(now())
+  assetId    String
+
+  asset     Asset    @relation(fields: [assetId], references: [id])
+  buyer     User     @relation(name: "bought", fields: [fromUserId], references: [id])
+  seller    User     @relation(name: "sold", fields: [toUserId], references: [id])
+  createdAt DateTime @default(now())
 
   // @@index([createdAt])  // but won't need because only useful incase of crash. at that time, just go through whole table.
-
 }
 
 // orderbook can be extracted from here open orders.
 model Order {
-  id    Int     @id @default(autoincrement())
-  type Order_Type
-  status Order_Status
-  price Int?
-  quantity Int
-  Symbol Symbol
-  userId String
-  leverage Int
-  side String
-  createdAt DateTime @default(now())
+  id        Int          @id @default(autoincrement())
+  type      Order_Type
+  status    Order_Status
+  price     Int?
+  quantity  Int
+  assetId   String
+  userId    String
+  leverage  Int
+  side      String
+  createdAt DateTime     @default(now())
 
-  @@index([userId, status, Symbol])
+  asset Asset @relation(fields: [assetId], references: [id])
   // @@index(type: Hash, [status]) // for getting the order book. // but won't need because only useful incase of crash. at that time, just go through whole table.
-  user User @relation(fields: [userId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([userId, status, assetId])
 }
 
-
-model Position{
-  id String @id @default(uuid())
-  userId String
-  Symbol Symbol
-  side Side
+model Position {
+  id            String   @id @default(uuid())
+  userId        String
+  assetId       String
+  side          Side
   average_price Int
-  quantity Int
-  leverage Int
-  createdAt DateTime @default(now())
+  quantity      Int
+  leverage      Int
+  createdAt     DateTime @default(now())
 
-  @@index([userId, Symbol])
-  user User @relation(fields: [userId], references: [id])
+  asset Asset @relation(fields: [assetId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([userId, assetId])
 }
 
 // todo create order history. don't need position history.
 // in order history, only show filled and canceled orders.
 
-model Historical_Data{
-  symbol Symbol
+model Historical_Data {
+  assetId   String
   timeframe Timeframe
   timestamp DateTime
-  open Int
-  high Int
-  low Int
-  close Int
-  volume Int
-  @@id([symbol, timeframe, timestamp])
-} 
+  open      Int
+  high      Int
+  low       Int
+  close     Int
+  volume    Int
+  asset     Asset     @relation(fields: [assetId], references: [id])
 
+  @@id([assetId, timeframe, timestamp])
+}
 
 // create history, add margins to user, etc. sleep for 20 minutes
