@@ -56,7 +56,7 @@ model Asset {
   id              String            @id @default(uuid())
   symbol          String
   name            String
-  img_url         String
+  img_url         String?
   trades          Trade[]
   orders          Order[]
   positions       Position[]
@@ -68,8 +68,8 @@ model User {
   email            String     @unique
   name             String
   password         String?
-  usdc             Int        @default(0)
-  available_margin Int        @default(0)
+  usdc             Float        @default(0)
+  available_margin Float        @default(0)
   bought           Trade[]    @relation("bought")
   sold             Trade[]    @relation("sold")
   orders           Order[]
@@ -77,16 +77,16 @@ model User {
 }
 
 model Trade {
-  id         Int    @id @default(autoincrement())
-  fromUserId String
-  toUserId   String
-  price      Int
+  id         String    @id @default(uuid())
+  buyerId String
+  sellerId   String
+  price      Float
   quantity   Int
   assetId    String
 
   asset     Asset    @relation(fields: [assetId], references: [id])
-  buyer     User     @relation(name: "bought", fields: [fromUserId], references: [id])
-  seller    User     @relation(name: "sold", fields: [toUserId], references: [id])
+  buyer     User     @relation(name: "bought", fields: [buyerId], references: [id])
+  seller    User     @relation(name: "sold", fields: [sellerId], references: [id])
   createdAt DateTime @default(now())
 
   // @@index([createdAt])  // but won't need because only useful incase of crash. at that time, just go through whole table.
@@ -94,15 +94,16 @@ model Trade {
 
 // orderbook can be extracted from here open orders.
 model Order {
-  id        Int          @id @default(autoincrement())
+  id        String          @id @default(uuid())
   type      Order_Type
   status    Order_Status
-  price     Int?
+  side      Side
+  price     Float?
   quantity  Int
+  filled_quantity Int?
   assetId   String
   userId    String
   leverage  Int
-  side      String
   createdAt DateTime     @default(now())
 
   asset Asset @relation(fields: [assetId], references: [id])
@@ -117,7 +118,7 @@ model Position {
   userId        String
   assetId       String
   side          Side
-  average_price Int
+  average_price Float
   quantity      Int
   leverage      Int
   createdAt     DateTime @default(now())
@@ -131,14 +132,16 @@ model Position {
 // todo create order history. don't need position history.
 // in order history, only show filled and canceled orders.
 
+// ^^^^^^ nevermind won't need it because can be calculated from orders. ^^^^^^^^
+
 model Historical_Data {
   assetId   String
   timeframe Timeframe
   timestamp DateTime
-  open      Int
-  high      Int
-  low       Int
-  close     Int
+  open      Float
+  high      Float
+  low       Float
+  close     Float
   volume    Int
   asset     Asset     @relation(fields: [assetId], references: [id])
 
