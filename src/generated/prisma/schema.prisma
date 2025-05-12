@@ -1,0 +1,151 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// enums
+enum Order_Type {
+  LIMIT
+  MARKET
+}
+
+enum Order_Status {
+  OPEN
+  FILLED
+  PARTIALLY_FILLED
+  CANCELLED
+}
+
+enum Side {
+  ASK
+  BID
+}
+
+enum Timeframe {
+  ONE_MINUTE
+  THREE_MINUTE
+  FIVE_MINUTE
+  FIFTEEN_MINUTE
+  THIRTY_MINUTE
+  ONE_HOUR
+  TWO_HOUR
+  FOUR_HOUR
+  SIX_HOUR
+  EIGHT_HOUR
+  TWELVE_HOUR
+  ONE_DAY
+  THREE_DAY
+  ONE_WEEK
+  ONE_MONTH
+}
+
+// models
+
+model Asset {
+  id              String            @id @default(uuid())
+  symbol          String
+  name            String
+  img_url         String?
+  trades          Trade[]
+  orders          Order[]
+  positions       Position[]
+  historical_data Historical_Data[]
+}
+
+model User {
+  id               String     @id @default(uuid())
+  email            String     @unique
+  name             String
+  password         String?
+  usdc             Int        @default(0)
+  available_margin Int        @default(0)
+  bought           Trade[]    @relation("bought")
+  sold             Trade[]    @relation("sold")
+  orders           Order[]
+  positions        Position[]
+}
+
+model Trade {
+  id       String @id @default(uuid())
+  buyerId  String
+  sellerId String
+  price    Int
+  quantity Int
+  assetId  String
+
+  asset     Asset    @relation(fields: [assetId], references: [id])
+  buyer     User     @relation(name: "bought", fields: [buyerId], references: [id])
+  seller    User     @relation(name: "sold", fields: [sellerId], references: [id])
+  createdAt DateTime @default(now())
+
+  // @@index([createdAt])  // but won't need because only useful incase of crash. at that time, just go through whole table.
+}
+
+// orderbook can be extracted from here open orders.
+model Order {
+  id              String       @id @default(uuid())
+  type            Order_Type
+  status          Order_Status
+  side            Side
+  price           Int?
+  quantity        Int
+  filled_quantity Int?
+  assetId         String
+  userId          String
+  leverage        Int
+  createdAt       DateTime     @default(now())
+
+  asset Asset @relation(fields: [assetId], references: [id])
+  // @@index(type: Hash, [status]) // for getting the order book. // but won't need because only useful incase of crash. at that time, just go through whole table.
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([userId, status, assetId])
+}
+
+model Position {
+  id            String   @id @default(uuid())
+  userId        String
+  assetId       String
+  side          Side
+  average_price Int
+  quantity      Int
+  leverage      Int
+  createdAt     DateTime @default(now())
+
+  asset Asset @relation(fields: [assetId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([userId, assetId])
+}
+
+// todo create order history. don't need position history.
+// in order history, only show filled and canceled orders.
+
+// ^^^^^^ nevermind won't need it because can be calculated from orders. ^^^^^^^^
+
+model Historical_Data {
+  assetId   String
+  timeframe Timeframe
+  timestamp DateTime
+  open      Int
+  high      Int
+  low       Int
+  close     Int
+  volume    Int
+  asset     Asset     @relation(fields: [assetId], references: [id])
+
+  @@id([assetId, timeframe, timestamp])
+}
+
+// create history, add margins to user, etc. sleep for 20 minutes
