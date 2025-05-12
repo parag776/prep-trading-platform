@@ -101,6 +101,7 @@ model Order {
   price     Float?
   quantity  Int
   filled_quantity Int?
+  average_filled_price Float?
   assetId   String
   userId    String
   leverage  Int
