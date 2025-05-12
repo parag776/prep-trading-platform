@@ -32,7 +32,7 @@ enum Side {
   BID
 }
 
-enum Timeframe {
+enum Resolution {
   ONE_MINUTE
   THREE_MINUTE
   FIVE_MINUTE
@@ -45,7 +45,6 @@ enum Timeframe {
   EIGHT_HOUR
   TWELVE_HOUR
   ONE_DAY
-  THREE_DAY
   ONE_WEEK
   ONE_MONTH
 }
@@ -157,7 +156,7 @@ model Position {
 
 model Historical_Data {
   assetId   String
-  timeframe Timeframe
+  resolution Resolution
   timestamp DateTime
   open      Float
   high      Float
@@ -166,7 +165,7 @@ model Historical_Data {
   volume    Int
   asset     Asset     @relation(fields: [assetId], references: [id])
 
-  @@id([assetId, timeframe, timestamp])
+  @@id([assetId, resolution, timestamp])
 }
 
 // create history, add margins to user, etc. sleep for 20 minutes
