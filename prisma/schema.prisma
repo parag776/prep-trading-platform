@@ -69,7 +69,6 @@ model User {
   name             String
   password         String?
   usdc             Float        @default(0)
-  fee_unpaid Float @default(0)
   funding_unpaid Float @default(0)
   bought           Trade[]    @relation("bought")
   sold             Trade[]    @relation("sold")
