@@ -21,11 +21,7 @@ const assets = [
         name: "ethereum",
     },
     {
-        symbol: "USDC",
-        name: "usd coin",
-    },
-    {
-        symbol: "XPR",
+        symbol: "XRP",
         name: "xrp",
     }
 ]

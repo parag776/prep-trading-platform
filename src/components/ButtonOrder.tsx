@@ -1,4 +1,4 @@
-import { Side } from '@/lib/orderbook'
+import { Side } from '@/lib/frontend/orderbook'
 import React from 'react'
 
 function Button({onClick, side}: {onClick: ()=>void, side:Side}) {

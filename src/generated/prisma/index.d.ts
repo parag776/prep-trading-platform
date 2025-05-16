@@ -59,7 +59,6 @@ export type Order_Type = (typeof Order_Type)[keyof typeof Order_Type]
 export const Order_Status: {
   OPEN: 'OPEN',
   FILLED: 'FILLED',
-  PARTIALLY_FILLED: 'PARTIALLY_FILLED',
   CANCELLED: 'CANCELLED'
 };
 
@@ -74,7 +73,7 @@ export const Side: {
 export type Side = (typeof Side)[keyof typeof Side]
 
 
-export const Timeframe: {
+export const Resolution: {
   ONE_MINUTE: 'ONE_MINUTE',
   THREE_MINUTE: 'THREE_MINUTE',
   FIVE_MINUTE: 'FIVE_MINUTE',
@@ -87,12 +86,10 @@ export const Timeframe: {
   EIGHT_HOUR: 'EIGHT_HOUR',
   TWELVE_HOUR: 'TWELVE_HOUR',
   ONE_DAY: 'ONE_DAY',
-  THREE_DAY: 'THREE_DAY',
-  ONE_WEEK: 'ONE_WEEK',
-  ONE_MONTH: 'ONE_MONTH'
+  ONE_WEEK: 'ONE_WEEK'
 };
 
-export type Timeframe = (typeof Timeframe)[keyof typeof Timeframe]
+export type Resolution = (typeof Resolution)[keyof typeof Resolution]
 
 }
 
@@ -108,9 +105,9 @@ export type Side = $Enums.Side
 
 export const Side: typeof $Enums.Side
 
-export type Timeframe = $Enums.Timeframe
+export type Resolution = $Enums.Resolution
 
-export const Timeframe: typeof $Enums.Timeframe
+export const Resolution: typeof $Enums.Resolution
 
 /**
  * ##  Prisma Client ʲˢ
@@ -2661,13 +2658,15 @@ export namespace Prisma {
   }
 
   export type UserAvgAggregateOutputType = {
+    total_deposit: number | null
     usdc: number | null
-    available_margin: number | null
+    funding_unpaid: number | null
   }
 
   export type UserSumAggregateOutputType = {
+    total_deposit: number | null
     usdc: number | null
-    available_margin: number | null
+    funding_unpaid: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -2675,8 +2674,9 @@ export namespace Prisma {
     email: string | null
     name: string | null
     password: string | null
+    total_deposit: number | null
     usdc: number | null
-    available_margin: number | null
+    funding_unpaid: number | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -2684,8 +2684,9 @@ export namespace Prisma {
     email: string | null
     name: string | null
     password: string | null
+    total_deposit: number | null
     usdc: number | null
-    available_margin: number | null
+    funding_unpaid: number | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -2693,20 +2694,23 @@ export namespace Prisma {
     email: number
     name: number
     password: number
+    total_deposit: number
     usdc: number
-    available_margin: number
+    funding_unpaid: number
     _all: number
   }
 
 
   export type UserAvgAggregateInputType = {
+    total_deposit?: true
     usdc?: true
-    available_margin?: true
+    funding_unpaid?: true
   }
 
   export type UserSumAggregateInputType = {
+    total_deposit?: true
     usdc?: true
-    available_margin?: true
+    funding_unpaid?: true
   }
 
   export type UserMinAggregateInputType = {
@@ -2714,8 +2718,9 @@ export namespace Prisma {
     email?: true
     name?: true
     password?: true
+    total_deposit?: true
     usdc?: true
-    available_margin?: true
+    funding_unpaid?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -2723,8 +2728,9 @@ export namespace Prisma {
     email?: true
     name?: true
     password?: true
+    total_deposit?: true
     usdc?: true
-    available_margin?: true
+    funding_unpaid?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -2732,8 +2738,9 @@ export namespace Prisma {
     email?: true
     name?: true
     password?: true
+    total_deposit?: true
     usdc?: true
-    available_margin?: true
+    funding_unpaid?: true
     _all?: true
   }
 
@@ -2828,8 +2835,9 @@ export namespace Prisma {
     email: string
     name: string
     password: string | null
+    total_deposit: number
     usdc: number
-    available_margin: number
+    funding_unpaid: number
     _count: UserCountAggregateOutputType | null
     _avg: UserAvgAggregateOutputType | null
     _sum: UserSumAggregateOutputType | null
@@ -2856,8 +2864,9 @@ export namespace Prisma {
     email?: boolean
     name?: boolean
     password?: boolean
+    total_deposit?: boolean
     usdc?: boolean
-    available_margin?: boolean
+    funding_unpaid?: boolean
     bought?: boolean | User$boughtArgs<ExtArgs>
     sold?: boolean | User$soldArgs<ExtArgs>
     orders?: boolean | User$ordersArgs<ExtArgs>
@@ -2870,8 +2879,9 @@ export namespace Prisma {
     email?: boolean
     name?: boolean
     password?: boolean
+    total_deposit?: boolean
     usdc?: boolean
-    available_margin?: boolean
+    funding_unpaid?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2879,8 +2889,9 @@ export namespace Prisma {
     email?: boolean
     name?: boolean
     password?: boolean
+    total_deposit?: boolean
     usdc?: boolean
-    available_margin?: boolean
+    funding_unpaid?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -2888,11 +2899,12 @@ export namespace Prisma {
     email?: boolean
     name?: boolean
     password?: boolean
+    total_deposit?: boolean
     usdc?: boolean
-    available_margin?: boolean
+    funding_unpaid?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "password" | "usdc" | "available_margin", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "password" | "total_deposit" | "usdc" | "funding_unpaid", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bought?: boolean | User$boughtArgs<ExtArgs>
     sold?: boolean | User$soldArgs<ExtArgs>
@@ -2916,8 +2928,9 @@ export namespace Prisma {
       email: string
       name: string
       password: string | null
+      total_deposit: number
       usdc: number
-      available_margin: number
+      funding_unpaid: number
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -3349,8 +3362,9 @@ export namespace Prisma {
     readonly email: FieldRef<"User", 'String'>
     readonly name: FieldRef<"User", 'String'>
     readonly password: FieldRef<"User", 'String'>
-    readonly usdc: FieldRef<"User", 'Int'>
-    readonly available_margin: FieldRef<"User", 'Int'>
+    readonly total_deposit: FieldRef<"User", 'Float'>
+    readonly usdc: FieldRef<"User", 'Float'>
+    readonly funding_unpaid: FieldRef<"User", 'Float'>
   }
     
 
@@ -4573,8 +4587,8 @@ export namespace Prisma {
     readonly id: FieldRef<"Trade", 'String'>
     readonly buyerId: FieldRef<"Trade", 'String'>
     readonly sellerId: FieldRef<"Trade", 'String'>
-    readonly price: FieldRef<"Trade", 'Int'>
-    readonly quantity: FieldRef<"Trade", 'Int'>
+    readonly price: FieldRef<"Trade", 'Float'>
+    readonly quantity: FieldRef<"Trade", 'Float'>
     readonly assetId: FieldRef<"Trade", 'String'>
     readonly createdAt: FieldRef<"Trade", 'DateTime'>
   }
@@ -5007,6 +5021,7 @@ export namespace Prisma {
     price: number | null
     quantity: number | null
     filled_quantity: number | null
+    average_filled_price: number | null
     leverage: number | null
   }
 
@@ -5014,6 +5029,7 @@ export namespace Prisma {
     price: number | null
     quantity: number | null
     filled_quantity: number | null
+    average_filled_price: number | null
     leverage: number | null
   }
 
@@ -5025,6 +5041,7 @@ export namespace Prisma {
     price: number | null
     quantity: number | null
     filled_quantity: number | null
+    average_filled_price: number | null
     assetId: string | null
     userId: string | null
     leverage: number | null
@@ -5039,6 +5056,7 @@ export namespace Prisma {
     price: number | null
     quantity: number | null
     filled_quantity: number | null
+    average_filled_price: number | null
     assetId: string | null
     userId: string | null
     leverage: number | null
@@ -5053,6 +5071,7 @@ export namespace Prisma {
     price: number
     quantity: number
     filled_quantity: number
+    average_filled_price: number
     assetId: number
     userId: number
     leverage: number
@@ -5065,6 +5084,7 @@ export namespace Prisma {
     price?: true
     quantity?: true
     filled_quantity?: true
+    average_filled_price?: true
     leverage?: true
   }
 
@@ -5072,6 +5092,7 @@ export namespace Prisma {
     price?: true
     quantity?: true
     filled_quantity?: true
+    average_filled_price?: true
     leverage?: true
   }
 
@@ -5083,6 +5104,7 @@ export namespace Prisma {
     price?: true
     quantity?: true
     filled_quantity?: true
+    average_filled_price?: true
     assetId?: true
     userId?: true
     leverage?: true
@@ -5097,6 +5119,7 @@ export namespace Prisma {
     price?: true
     quantity?: true
     filled_quantity?: true
+    average_filled_price?: true
     assetId?: true
     userId?: true
     leverage?: true
@@ -5111,6 +5134,7 @@ export namespace Prisma {
     price?: true
     quantity?: true
     filled_quantity?: true
+    average_filled_price?: true
     assetId?: true
     userId?: true
     leverage?: true
@@ -5211,7 +5235,8 @@ export namespace Prisma {
     side: $Enums.Side
     price: number | null
     quantity: number
-    filled_quantity: number | null
+    filled_quantity: number
+    average_filled_price: number
     assetId: string
     userId: string
     leverage: number
@@ -5245,6 +5270,7 @@ export namespace Prisma {
     price?: boolean
     quantity?: boolean
     filled_quantity?: boolean
+    average_filled_price?: boolean
     assetId?: boolean
     userId?: boolean
     leverage?: boolean
@@ -5261,6 +5287,7 @@ export namespace Prisma {
     price?: boolean
     quantity?: boolean
     filled_quantity?: boolean
+    average_filled_price?: boolean
     assetId?: boolean
     userId?: boolean
     leverage?: boolean
@@ -5277,6 +5304,7 @@ export namespace Prisma {
     price?: boolean
     quantity?: boolean
     filled_quantity?: boolean
+    average_filled_price?: boolean
     assetId?: boolean
     userId?: boolean
     leverage?: boolean
@@ -5293,13 +5321,14 @@ export namespace Prisma {
     price?: boolean
     quantity?: boolean
     filled_quantity?: boolean
+    average_filled_price?: boolean
     assetId?: boolean
     userId?: boolean
     leverage?: boolean
     createdAt?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "status" | "side" | "price" | "quantity" | "filled_quantity" | "assetId" | "userId" | "leverage" | "createdAt", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "status" | "side" | "price" | "quantity" | "filled_quantity" | "average_filled_price" | "assetId" | "userId" | "leverage" | "createdAt", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     asset?: boolean | AssetDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -5326,7 +5355,8 @@ export namespace Prisma {
       side: $Enums.Side
       price: number | null
       quantity: number
-      filled_quantity: number | null
+      filled_quantity: number
+      average_filled_price: number
       assetId: string
       userId: string
       leverage: number
@@ -5760,9 +5790,10 @@ export namespace Prisma {
     readonly type: FieldRef<"Order", 'Order_Type'>
     readonly status: FieldRef<"Order", 'Order_Status'>
     readonly side: FieldRef<"Order", 'Side'>
-    readonly price: FieldRef<"Order", 'Int'>
-    readonly quantity: FieldRef<"Order", 'Int'>
-    readonly filled_quantity: FieldRef<"Order", 'Int'>
+    readonly price: FieldRef<"Order", 'Float'>
+    readonly quantity: FieldRef<"Order", 'Float'>
+    readonly filled_quantity: FieldRef<"Order", 'Float'>
+    readonly average_filled_price: FieldRef<"Order", 'Float'>
     readonly assetId: FieldRef<"Order", 'String'>
     readonly userId: FieldRef<"Order", 'String'>
     readonly leverage: FieldRef<"Order", 'Int'>
@@ -6910,8 +6941,8 @@ export namespace Prisma {
     readonly userId: FieldRef<"Position", 'String'>
     readonly assetId: FieldRef<"Position", 'String'>
     readonly side: FieldRef<"Position", 'Side'>
-    readonly average_price: FieldRef<"Position", 'Int'>
-    readonly quantity: FieldRef<"Position", 'Int'>
+    readonly average_price: FieldRef<"Position", 'Float'>
+    readonly quantity: FieldRef<"Position", 'Float'>
     readonly leverage: FieldRef<"Position", 'Int'>
     readonly createdAt: FieldRef<"Position", 'DateTime'>
   }
@@ -7358,7 +7389,7 @@ export namespace Prisma {
 
   export type Historical_DataMinAggregateOutputType = {
     assetId: string | null
-    timeframe: $Enums.Timeframe | null
+    resolution: $Enums.Resolution | null
     timestamp: Date | null
     open: number | null
     high: number | null
@@ -7369,7 +7400,7 @@ export namespace Prisma {
 
   export type Historical_DataMaxAggregateOutputType = {
     assetId: string | null
-    timeframe: $Enums.Timeframe | null
+    resolution: $Enums.Resolution | null
     timestamp: Date | null
     open: number | null
     high: number | null
@@ -7380,7 +7411,7 @@ export namespace Prisma {
 
   export type Historical_DataCountAggregateOutputType = {
     assetId: number
-    timeframe: number
+    resolution: number
     timestamp: number
     open: number
     high: number
@@ -7409,7 +7440,7 @@ export namespace Prisma {
 
   export type Historical_DataMinAggregateInputType = {
     assetId?: true
-    timeframe?: true
+    resolution?: true
     timestamp?: true
     open?: true
     high?: true
@@ -7420,7 +7451,7 @@ export namespace Prisma {
 
   export type Historical_DataMaxAggregateInputType = {
     assetId?: true
-    timeframe?: true
+    resolution?: true
     timestamp?: true
     open?: true
     high?: true
@@ -7431,7 +7462,7 @@ export namespace Prisma {
 
   export type Historical_DataCountAggregateInputType = {
     assetId?: true
-    timeframe?: true
+    resolution?: true
     timestamp?: true
     open?: true
     high?: true
@@ -7529,7 +7560,7 @@ export namespace Prisma {
 
   export type Historical_DataGroupByOutputType = {
     assetId: string
-    timeframe: $Enums.Timeframe
+    resolution: $Enums.Resolution
     timestamp: Date
     open: number
     high: number
@@ -7559,7 +7590,7 @@ export namespace Prisma {
 
   export type Historical_DataSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     assetId?: boolean
-    timeframe?: boolean
+    resolution?: boolean
     timestamp?: boolean
     open?: boolean
     high?: boolean
@@ -7571,7 +7602,7 @@ export namespace Prisma {
 
   export type Historical_DataSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     assetId?: boolean
-    timeframe?: boolean
+    resolution?: boolean
     timestamp?: boolean
     open?: boolean
     high?: boolean
@@ -7583,7 +7614,7 @@ export namespace Prisma {
 
   export type Historical_DataSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     assetId?: boolean
-    timeframe?: boolean
+    resolution?: boolean
     timestamp?: boolean
     open?: boolean
     high?: boolean
@@ -7595,7 +7626,7 @@ export namespace Prisma {
 
   export type Historical_DataSelectScalar = {
     assetId?: boolean
-    timeframe?: boolean
+    resolution?: boolean
     timestamp?: boolean
     open?: boolean
     high?: boolean
@@ -7604,7 +7635,7 @@ export namespace Prisma {
     volume?: boolean
   }
 
-  export type Historical_DataOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"assetId" | "timeframe" | "timestamp" | "open" | "high" | "low" | "close" | "volume", ExtArgs["result"]["historical_Data"]>
+  export type Historical_DataOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"assetId" | "resolution" | "timestamp" | "open" | "high" | "low" | "close" | "volume", ExtArgs["result"]["historical_Data"]>
   export type Historical_DataInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     asset?: boolean | AssetDefaultArgs<ExtArgs>
   }
@@ -7622,7 +7653,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       assetId: string
-      timeframe: $Enums.Timeframe
+      resolution: $Enums.Resolution
       timestamp: Date
       open: number
       high: number
@@ -8054,13 +8085,13 @@ export namespace Prisma {
    */
   interface Historical_DataFieldRefs {
     readonly assetId: FieldRef<"Historical_Data", 'String'>
-    readonly timeframe: FieldRef<"Historical_Data", 'Timeframe'>
+    readonly resolution: FieldRef<"Historical_Data", 'Resolution'>
     readonly timestamp: FieldRef<"Historical_Data", 'DateTime'>
-    readonly open: FieldRef<"Historical_Data", 'Int'>
-    readonly high: FieldRef<"Historical_Data", 'Int'>
-    readonly low: FieldRef<"Historical_Data", 'Int'>
-    readonly close: FieldRef<"Historical_Data", 'Int'>
-    readonly volume: FieldRef<"Historical_Data", 'Int'>
+    readonly open: FieldRef<"Historical_Data", 'Float'>
+    readonly high: FieldRef<"Historical_Data", 'Float'>
+    readonly low: FieldRef<"Historical_Data", 'Float'>
+    readonly close: FieldRef<"Historical_Data", 'Float'>
+    readonly volume: FieldRef<"Historical_Data", 'Float'>
   }
     
 
@@ -8504,8 +8535,9 @@ export namespace Prisma {
     email: 'email',
     name: 'name',
     password: 'password',
+    total_deposit: 'total_deposit',
     usdc: 'usdc',
-    available_margin: 'available_margin'
+    funding_unpaid: 'funding_unpaid'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -8532,6 +8564,7 @@ export namespace Prisma {
     price: 'price',
     quantity: 'quantity',
     filled_quantity: 'filled_quantity',
+    average_filled_price: 'average_filled_price',
     assetId: 'assetId',
     userId: 'userId',
     leverage: 'leverage',
@@ -8557,7 +8590,7 @@ export namespace Prisma {
 
   export const Historical_DataScalarFieldEnum: {
     assetId: 'assetId',
-    timeframe: 'timeframe',
+    resolution: 'resolution',
     timestamp: 'timestamp',
     open: 'open',
     high: 'high',
@@ -8613,16 +8646,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Int'
+   * Reference to a field of type 'Float'
    */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
     
 
 
   /**
-   * Reference to a field of type 'Int[]'
+   * Reference to a field of type 'Float[]'
    */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 
@@ -8683,30 +8716,30 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Timeframe'
+   * Reference to a field of type 'Int'
    */
-  export type EnumTimeframeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Timeframe'>
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
     
 
 
   /**
-   * Reference to a field of type 'Timeframe[]'
+   * Reference to a field of type 'Int[]'
    */
-  export type ListEnumTimeframeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Timeframe[]'>
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
   /**
-   * Reference to a field of type 'Float'
+   * Reference to a field of type 'Resolution'
    */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+  export type EnumResolutionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Resolution'>
     
 
 
   /**
-   * Reference to a field of type 'Float[]'
+   * Reference to a field of type 'Resolution[]'
    */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+  export type ListEnumResolutionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Resolution[]'>
     
   /**
    * Deep Input Types
@@ -8740,17 +8773,17 @@ export namespace Prisma {
 
   export type AssetWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    symbol?: string
     AND?: AssetWhereInput | AssetWhereInput[]
     OR?: AssetWhereInput[]
     NOT?: AssetWhereInput | AssetWhereInput[]
-    symbol?: StringFilter<"Asset"> | string
     name?: StringFilter<"Asset"> | string
     img_url?: StringNullableFilter<"Asset"> | string | null
     trades?: TradeListRelationFilter
     orders?: OrderListRelationFilter
     positions?: PositionListRelationFilter
     historical_data?: Historical_DataListRelationFilter
-  }, "id">
+  }, "id" | "symbol">
 
   export type AssetOrderByWithAggregationInput = {
     id?: SortOrder
@@ -8780,8 +8813,9 @@ export namespace Prisma {
     email?: StringFilter<"User"> | string
     name?: StringFilter<"User"> | string
     password?: StringNullableFilter<"User"> | string | null
-    usdc?: IntFilter<"User"> | number
-    available_margin?: IntFilter<"User"> | number
+    total_deposit?: FloatFilter<"User"> | number
+    usdc?: FloatFilter<"User"> | number
+    funding_unpaid?: FloatFilter<"User"> | number
     bought?: TradeListRelationFilter
     sold?: TradeListRelationFilter
     orders?: OrderListRelationFilter
@@ -8793,8 +8827,9 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrder
     password?: SortOrderInput | SortOrder
+    total_deposit?: SortOrder
     usdc?: SortOrder
-    available_margin?: SortOrder
+    funding_unpaid?: SortOrder
     bought?: TradeOrderByRelationAggregateInput
     sold?: TradeOrderByRelationAggregateInput
     orders?: OrderOrderByRelationAggregateInput
@@ -8809,8 +8844,9 @@ export namespace Prisma {
     NOT?: UserWhereInput | UserWhereInput[]
     name?: StringFilter<"User"> | string
     password?: StringNullableFilter<"User"> | string | null
-    usdc?: IntFilter<"User"> | number
-    available_margin?: IntFilter<"User"> | number
+    total_deposit?: FloatFilter<"User"> | number
+    usdc?: FloatFilter<"User"> | number
+    funding_unpaid?: FloatFilter<"User"> | number
     bought?: TradeListRelationFilter
     sold?: TradeListRelationFilter
     orders?: OrderListRelationFilter
@@ -8822,8 +8858,9 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrder
     password?: SortOrderInput | SortOrder
+    total_deposit?: SortOrder
     usdc?: SortOrder
-    available_margin?: SortOrder
+    funding_unpaid?: SortOrder
     _count?: UserCountOrderByAggregateInput
     _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
@@ -8839,8 +8876,9 @@ export namespace Prisma {
     email?: StringWithAggregatesFilter<"User"> | string
     name?: StringWithAggregatesFilter<"User"> | string
     password?: StringNullableWithAggregatesFilter<"User"> | string | null
-    usdc?: IntWithAggregatesFilter<"User"> | number
-    available_margin?: IntWithAggregatesFilter<"User"> | number
+    total_deposit?: FloatWithAggregatesFilter<"User"> | number
+    usdc?: FloatWithAggregatesFilter<"User"> | number
+    funding_unpaid?: FloatWithAggregatesFilter<"User"> | number
   }
 
   export type TradeWhereInput = {
@@ -8850,8 +8888,8 @@ export namespace Prisma {
     id?: StringFilter<"Trade"> | string
     buyerId?: StringFilter<"Trade"> | string
     sellerId?: StringFilter<"Trade"> | string
-    price?: IntFilter<"Trade"> | number
-    quantity?: IntFilter<"Trade"> | number
+    price?: FloatFilter<"Trade"> | number
+    quantity?: FloatFilter<"Trade"> | number
     assetId?: StringFilter<"Trade"> | string
     createdAt?: DateTimeFilter<"Trade"> | Date | string
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
@@ -8879,8 +8917,8 @@ export namespace Prisma {
     NOT?: TradeWhereInput | TradeWhereInput[]
     buyerId?: StringFilter<"Trade"> | string
     sellerId?: StringFilter<"Trade"> | string
-    price?: IntFilter<"Trade"> | number
-    quantity?: IntFilter<"Trade"> | number
+    price?: FloatFilter<"Trade"> | number
+    quantity?: FloatFilter<"Trade"> | number
     assetId?: StringFilter<"Trade"> | string
     createdAt?: DateTimeFilter<"Trade"> | Date | string
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
@@ -8910,8 +8948,8 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Trade"> | string
     buyerId?: StringWithAggregatesFilter<"Trade"> | string
     sellerId?: StringWithAggregatesFilter<"Trade"> | string
-    price?: IntWithAggregatesFilter<"Trade"> | number
-    quantity?: IntWithAggregatesFilter<"Trade"> | number
+    price?: FloatWithAggregatesFilter<"Trade"> | number
+    quantity?: FloatWithAggregatesFilter<"Trade"> | number
     assetId?: StringWithAggregatesFilter<"Trade"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Trade"> | Date | string
   }
@@ -8924,9 +8962,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFilter<"Order"> | $Enums.Order_Type
     status?: EnumOrder_StatusFilter<"Order"> | $Enums.Order_Status
     side?: EnumSideFilter<"Order"> | $Enums.Side
-    price?: IntNullableFilter<"Order"> | number | null
-    quantity?: IntFilter<"Order"> | number
-    filled_quantity?: IntNullableFilter<"Order"> | number | null
+    price?: FloatNullableFilter<"Order"> | number | null
+    quantity?: FloatFilter<"Order"> | number
+    filled_quantity?: FloatFilter<"Order"> | number
+    average_filled_price?: FloatFilter<"Order"> | number
     assetId?: StringFilter<"Order"> | string
     userId?: StringFilter<"Order"> | string
     leverage?: IntFilter<"Order"> | number
@@ -8942,7 +8981,8 @@ export namespace Prisma {
     side?: SortOrder
     price?: SortOrderInput | SortOrder
     quantity?: SortOrder
-    filled_quantity?: SortOrderInput | SortOrder
+    filled_quantity?: SortOrder
+    average_filled_price?: SortOrder
     assetId?: SortOrder
     userId?: SortOrder
     leverage?: SortOrder
@@ -8959,9 +8999,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFilter<"Order"> | $Enums.Order_Type
     status?: EnumOrder_StatusFilter<"Order"> | $Enums.Order_Status
     side?: EnumSideFilter<"Order"> | $Enums.Side
-    price?: IntNullableFilter<"Order"> | number | null
-    quantity?: IntFilter<"Order"> | number
-    filled_quantity?: IntNullableFilter<"Order"> | number | null
+    price?: FloatNullableFilter<"Order"> | number | null
+    quantity?: FloatFilter<"Order"> | number
+    filled_quantity?: FloatFilter<"Order"> | number
+    average_filled_price?: FloatFilter<"Order"> | number
     assetId?: StringFilter<"Order"> | string
     userId?: StringFilter<"Order"> | string
     leverage?: IntFilter<"Order"> | number
@@ -8977,7 +9018,8 @@ export namespace Prisma {
     side?: SortOrder
     price?: SortOrderInput | SortOrder
     quantity?: SortOrder
-    filled_quantity?: SortOrderInput | SortOrder
+    filled_quantity?: SortOrder
+    average_filled_price?: SortOrder
     assetId?: SortOrder
     userId?: SortOrder
     leverage?: SortOrder
@@ -8997,9 +9039,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeWithAggregatesFilter<"Order"> | $Enums.Order_Type
     status?: EnumOrder_StatusWithAggregatesFilter<"Order"> | $Enums.Order_Status
     side?: EnumSideWithAggregatesFilter<"Order"> | $Enums.Side
-    price?: IntNullableWithAggregatesFilter<"Order"> | number | null
-    quantity?: IntWithAggregatesFilter<"Order"> | number
-    filled_quantity?: IntNullableWithAggregatesFilter<"Order"> | number | null
+    price?: FloatNullableWithAggregatesFilter<"Order"> | number | null
+    quantity?: FloatWithAggregatesFilter<"Order"> | number
+    filled_quantity?: FloatWithAggregatesFilter<"Order"> | number
+    average_filled_price?: FloatWithAggregatesFilter<"Order"> | number
     assetId?: StringWithAggregatesFilter<"Order"> | string
     userId?: StringWithAggregatesFilter<"Order"> | string
     leverage?: IntWithAggregatesFilter<"Order"> | number
@@ -9014,8 +9057,8 @@ export namespace Prisma {
     userId?: StringFilter<"Position"> | string
     assetId?: StringFilter<"Position"> | string
     side?: EnumSideFilter<"Position"> | $Enums.Side
-    average_price?: IntFilter<"Position"> | number
-    quantity?: IntFilter<"Position"> | number
+    average_price?: FloatFilter<"Position"> | number
+    quantity?: FloatFilter<"Position"> | number
     leverage?: IntFilter<"Position"> | number
     createdAt?: DateTimeFilter<"Position"> | Date | string
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
@@ -9043,8 +9086,8 @@ export namespace Prisma {
     userId?: StringFilter<"Position"> | string
     assetId?: StringFilter<"Position"> | string
     side?: EnumSideFilter<"Position"> | $Enums.Side
-    average_price?: IntFilter<"Position"> | number
-    quantity?: IntFilter<"Position"> | number
+    average_price?: FloatFilter<"Position"> | number
+    quantity?: FloatFilter<"Position"> | number
     leverage?: IntFilter<"Position"> | number
     createdAt?: DateTimeFilter<"Position"> | Date | string
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
@@ -9075,8 +9118,8 @@ export namespace Prisma {
     userId?: StringWithAggregatesFilter<"Position"> | string
     assetId?: StringWithAggregatesFilter<"Position"> | string
     side?: EnumSideWithAggregatesFilter<"Position"> | $Enums.Side
-    average_price?: IntWithAggregatesFilter<"Position"> | number
-    quantity?: IntWithAggregatesFilter<"Position"> | number
+    average_price?: FloatWithAggregatesFilter<"Position"> | number
+    quantity?: FloatWithAggregatesFilter<"Position"> | number
     leverage?: IntWithAggregatesFilter<"Position"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Position"> | Date | string
   }
@@ -9086,19 +9129,19 @@ export namespace Prisma {
     OR?: Historical_DataWhereInput[]
     NOT?: Historical_DataWhereInput | Historical_DataWhereInput[]
     assetId?: StringFilter<"Historical_Data"> | string
-    timeframe?: EnumTimeframeFilter<"Historical_Data"> | $Enums.Timeframe
+    resolution?: EnumResolutionFilter<"Historical_Data"> | $Enums.Resolution
     timestamp?: DateTimeFilter<"Historical_Data"> | Date | string
-    open?: IntFilter<"Historical_Data"> | number
-    high?: IntFilter<"Historical_Data"> | number
-    low?: IntFilter<"Historical_Data"> | number
-    close?: IntFilter<"Historical_Data"> | number
-    volume?: IntFilter<"Historical_Data"> | number
+    open?: FloatFilter<"Historical_Data"> | number
+    high?: FloatFilter<"Historical_Data"> | number
+    low?: FloatFilter<"Historical_Data"> | number
+    close?: FloatFilter<"Historical_Data"> | number
+    volume?: FloatFilter<"Historical_Data"> | number
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
   }
 
   export type Historical_DataOrderByWithRelationInput = {
     assetId?: SortOrder
-    timeframe?: SortOrder
+    resolution?: SortOrder
     timestamp?: SortOrder
     open?: SortOrder
     high?: SortOrder
@@ -9109,24 +9152,24 @@ export namespace Prisma {
   }
 
   export type Historical_DataWhereUniqueInput = Prisma.AtLeast<{
-    assetId_timeframe_timestamp?: Historical_DataAssetIdTimeframeTimestampCompoundUniqueInput
+    assetId_resolution_timestamp?: Historical_DataAssetIdResolutionTimestampCompoundUniqueInput
     AND?: Historical_DataWhereInput | Historical_DataWhereInput[]
     OR?: Historical_DataWhereInput[]
     NOT?: Historical_DataWhereInput | Historical_DataWhereInput[]
     assetId?: StringFilter<"Historical_Data"> | string
-    timeframe?: EnumTimeframeFilter<"Historical_Data"> | $Enums.Timeframe
+    resolution?: EnumResolutionFilter<"Historical_Data"> | $Enums.Resolution
     timestamp?: DateTimeFilter<"Historical_Data"> | Date | string
-    open?: IntFilter<"Historical_Data"> | number
-    high?: IntFilter<"Historical_Data"> | number
-    low?: IntFilter<"Historical_Data"> | number
-    close?: IntFilter<"Historical_Data"> | number
-    volume?: IntFilter<"Historical_Data"> | number
+    open?: FloatFilter<"Historical_Data"> | number
+    high?: FloatFilter<"Historical_Data"> | number
+    low?: FloatFilter<"Historical_Data"> | number
+    close?: FloatFilter<"Historical_Data"> | number
+    volume?: FloatFilter<"Historical_Data"> | number
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
-  }, "assetId_timeframe_timestamp">
+  }, "assetId_resolution_timestamp">
 
   export type Historical_DataOrderByWithAggregationInput = {
     assetId?: SortOrder
-    timeframe?: SortOrder
+    resolution?: SortOrder
     timestamp?: SortOrder
     open?: SortOrder
     high?: SortOrder
@@ -9145,13 +9188,13 @@ export namespace Prisma {
     OR?: Historical_DataScalarWhereWithAggregatesInput[]
     NOT?: Historical_DataScalarWhereWithAggregatesInput | Historical_DataScalarWhereWithAggregatesInput[]
     assetId?: StringWithAggregatesFilter<"Historical_Data"> | string
-    timeframe?: EnumTimeframeWithAggregatesFilter<"Historical_Data"> | $Enums.Timeframe
+    resolution?: EnumResolutionWithAggregatesFilter<"Historical_Data"> | $Enums.Resolution
     timestamp?: DateTimeWithAggregatesFilter<"Historical_Data"> | Date | string
-    open?: IntWithAggregatesFilter<"Historical_Data"> | number
-    high?: IntWithAggregatesFilter<"Historical_Data"> | number
-    low?: IntWithAggregatesFilter<"Historical_Data"> | number
-    close?: IntWithAggregatesFilter<"Historical_Data"> | number
-    volume?: IntWithAggregatesFilter<"Historical_Data"> | number
+    open?: FloatWithAggregatesFilter<"Historical_Data"> | number
+    high?: FloatWithAggregatesFilter<"Historical_Data"> | number
+    low?: FloatWithAggregatesFilter<"Historical_Data"> | number
+    close?: FloatWithAggregatesFilter<"Historical_Data"> | number
+    volume?: FloatWithAggregatesFilter<"Historical_Data"> | number
   }
 
   export type AssetCreateInput = {
@@ -9224,8 +9267,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     bought?: TradeCreateNestedManyWithoutBuyerInput
     sold?: TradeCreateNestedManyWithoutSellerInput
     orders?: OrderCreateNestedManyWithoutUserInput
@@ -9237,8 +9281,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     bought?: TradeUncheckedCreateNestedManyWithoutBuyerInput
     sold?: TradeUncheckedCreateNestedManyWithoutSellerInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -9250,8 +9295,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     bought?: TradeUpdateManyWithoutBuyerNestedInput
     sold?: TradeUpdateManyWithoutSellerNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
@@ -9263,8 +9309,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     bought?: TradeUncheckedUpdateManyWithoutBuyerNestedInput
     sold?: TradeUncheckedUpdateManyWithoutSellerNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -9276,8 +9323,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
   }
 
   export type UserUpdateManyMutationInput = {
@@ -9285,8 +9333,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -9294,8 +9343,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
   }
 
   export type TradeCreateInput = {
@@ -9320,8 +9370,8 @@ export namespace Prisma {
 
   export type TradeUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutTradesNestedInput
     buyer?: UserUpdateOneRequiredWithoutBoughtNestedInput
@@ -9332,8 +9382,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     buyerId?: StringFieldUpdateOperationsInput | string
     sellerId?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9350,8 +9400,8 @@ export namespace Prisma {
 
   export type TradeUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -9359,8 +9409,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     buyerId?: StringFieldUpdateOperationsInput | string
     sellerId?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9372,7 +9422,8 @@ export namespace Prisma {
     side: $Enums.Side
     price?: number | null
     quantity: number
-    filled_quantity?: number | null
+    filled_quantity?: number
+    average_filled_price?: number
     leverage: number
     createdAt?: Date | string
     asset: AssetCreateNestedOneWithoutOrdersInput
@@ -9386,7 +9437,8 @@ export namespace Prisma {
     side: $Enums.Side
     price?: number | null
     quantity: number
-    filled_quantity?: number | null
+    filled_quantity?: number
+    average_filled_price?: number
     assetId: string
     userId: string
     leverage: number
@@ -9398,9 +9450,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutOrdersNestedInput
@@ -9412,9 +9465,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
@@ -9428,7 +9482,8 @@ export namespace Prisma {
     side: $Enums.Side
     price?: number | null
     quantity: number
-    filled_quantity?: number | null
+    filled_quantity?: number
+    average_filled_price?: number
     assetId: string
     userId: string
     leverage: number
@@ -9440,9 +9495,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9452,9 +9508,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
@@ -9486,8 +9543,8 @@ export namespace Prisma {
   export type PositionUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutPositionsNestedInput
@@ -9499,8 +9556,8 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     assetId?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9519,8 +9576,8 @@ export namespace Prisma {
   export type PositionUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9530,14 +9587,14 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     assetId?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type Historical_DataCreateInput = {
-    timeframe: $Enums.Timeframe
+    resolution: $Enums.Resolution
     timestamp: Date | string
     open: number
     high: number
@@ -9549,7 +9606,7 @@ export namespace Prisma {
 
   export type Historical_DataUncheckedCreateInput = {
     assetId: string
-    timeframe: $Enums.Timeframe
+    resolution: $Enums.Resolution
     timestamp: Date | string
     open: number
     high: number
@@ -9559,30 +9616,30 @@ export namespace Prisma {
   }
 
   export type Historical_DataUpdateInput = {
-    timeframe?: EnumTimeframeFieldUpdateOperationsInput | $Enums.Timeframe
+    resolution?: EnumResolutionFieldUpdateOperationsInput | $Enums.Resolution
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
-    open?: IntFieldUpdateOperationsInput | number
-    high?: IntFieldUpdateOperationsInput | number
-    low?: IntFieldUpdateOperationsInput | number
-    close?: IntFieldUpdateOperationsInput | number
-    volume?: IntFieldUpdateOperationsInput | number
+    open?: FloatFieldUpdateOperationsInput | number
+    high?: FloatFieldUpdateOperationsInput | number
+    low?: FloatFieldUpdateOperationsInput | number
+    close?: FloatFieldUpdateOperationsInput | number
+    volume?: FloatFieldUpdateOperationsInput | number
     asset?: AssetUpdateOneRequiredWithoutHistorical_dataNestedInput
   }
 
   export type Historical_DataUncheckedUpdateInput = {
     assetId?: StringFieldUpdateOperationsInput | string
-    timeframe?: EnumTimeframeFieldUpdateOperationsInput | $Enums.Timeframe
+    resolution?: EnumResolutionFieldUpdateOperationsInput | $Enums.Resolution
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
-    open?: IntFieldUpdateOperationsInput | number
-    high?: IntFieldUpdateOperationsInput | number
-    low?: IntFieldUpdateOperationsInput | number
-    close?: IntFieldUpdateOperationsInput | number
-    volume?: IntFieldUpdateOperationsInput | number
+    open?: FloatFieldUpdateOperationsInput | number
+    high?: FloatFieldUpdateOperationsInput | number
+    low?: FloatFieldUpdateOperationsInput | number
+    close?: FloatFieldUpdateOperationsInput | number
+    volume?: FloatFieldUpdateOperationsInput | number
   }
 
   export type Historical_DataCreateManyInput = {
     assetId: string
-    timeframe: $Enums.Timeframe
+    resolution: $Enums.Resolution
     timestamp: Date | string
     open: number
     high: number
@@ -9592,24 +9649,24 @@ export namespace Prisma {
   }
 
   export type Historical_DataUpdateManyMutationInput = {
-    timeframe?: EnumTimeframeFieldUpdateOperationsInput | $Enums.Timeframe
+    resolution?: EnumResolutionFieldUpdateOperationsInput | $Enums.Resolution
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
-    open?: IntFieldUpdateOperationsInput | number
-    high?: IntFieldUpdateOperationsInput | number
-    low?: IntFieldUpdateOperationsInput | number
-    close?: IntFieldUpdateOperationsInput | number
-    volume?: IntFieldUpdateOperationsInput | number
+    open?: FloatFieldUpdateOperationsInput | number
+    high?: FloatFieldUpdateOperationsInput | number
+    low?: FloatFieldUpdateOperationsInput | number
+    close?: FloatFieldUpdateOperationsInput | number
+    volume?: FloatFieldUpdateOperationsInput | number
   }
 
   export type Historical_DataUncheckedUpdateManyInput = {
     assetId?: StringFieldUpdateOperationsInput | string
-    timeframe?: EnumTimeframeFieldUpdateOperationsInput | $Enums.Timeframe
+    resolution?: EnumResolutionFieldUpdateOperationsInput | $Enums.Resolution
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
-    open?: IntFieldUpdateOperationsInput | number
-    high?: IntFieldUpdateOperationsInput | number
-    low?: IntFieldUpdateOperationsInput | number
-    close?: IntFieldUpdateOperationsInput | number
-    volume?: IntFieldUpdateOperationsInput | number
+    open?: FloatFieldUpdateOperationsInput | number
+    high?: FloatFieldUpdateOperationsInput | number
+    low?: FloatFieldUpdateOperationsInput | number
+    close?: FloatFieldUpdateOperationsInput | number
+    volume?: FloatFieldUpdateOperationsInput | number
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -9744,15 +9801,15 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
   }
 
   export type UserCountOrderByAggregateInput = {
@@ -9760,13 +9817,15 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrder
     password?: SortOrder
+    total_deposit?: SortOrder
     usdc?: SortOrder
-    available_margin?: SortOrder
+    funding_unpaid?: SortOrder
   }
 
   export type UserAvgOrderByAggregateInput = {
+    total_deposit?: SortOrder
     usdc?: SortOrder
-    available_margin?: SortOrder
+    funding_unpaid?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -9774,8 +9833,9 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrder
     password?: SortOrder
+    total_deposit?: SortOrder
     usdc?: SortOrder
-    available_margin?: SortOrder
+    funding_unpaid?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -9783,29 +9843,31 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrder
     password?: SortOrder
+    total_deposit?: SortOrder
     usdc?: SortOrder
-    available_margin?: SortOrder
+    funding_unpaid?: SortOrder
   }
 
   export type UserSumOrderByAggregateInput = {
+    total_deposit?: SortOrder
     usdc?: SortOrder
-    available_margin?: SortOrder
+    funding_unpaid?: SortOrder
   }
 
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
     _count?: NestedIntFilter<$PrismaModel>
     _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
   }
 
   export type DateTimeFilter<$PrismaModel = never> = {
@@ -9904,15 +9966,26 @@ export namespace Prisma {
     not?: NestedEnumSideFilter<$PrismaModel> | $Enums.Side
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type OrderCountOrderByAggregateInput = {
@@ -9923,6 +9996,7 @@ export namespace Prisma {
     price?: SortOrder
     quantity?: SortOrder
     filled_quantity?: SortOrder
+    average_filled_price?: SortOrder
     assetId?: SortOrder
     userId?: SortOrder
     leverage?: SortOrder
@@ -9933,6 +10007,7 @@ export namespace Prisma {
     price?: SortOrder
     quantity?: SortOrder
     filled_quantity?: SortOrder
+    average_filled_price?: SortOrder
     leverage?: SortOrder
   }
 
@@ -9944,6 +10019,7 @@ export namespace Prisma {
     price?: SortOrder
     quantity?: SortOrder
     filled_quantity?: SortOrder
+    average_filled_price?: SortOrder
     assetId?: SortOrder
     userId?: SortOrder
     leverage?: SortOrder
@@ -9958,6 +10034,7 @@ export namespace Prisma {
     price?: SortOrder
     quantity?: SortOrder
     filled_quantity?: SortOrder
+    average_filled_price?: SortOrder
     assetId?: SortOrder
     userId?: SortOrder
     leverage?: SortOrder
@@ -9968,6 +10045,7 @@ export namespace Prisma {
     price?: SortOrder
     quantity?: SortOrder
     filled_quantity?: SortOrder
+    average_filled_price?: SortOrder
     leverage?: SortOrder
   }
 
@@ -10001,20 +10079,36 @@ export namespace Prisma {
     _max?: NestedEnumSideFilter<$PrismaModel>
   }
 
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type PositionCountOrderByAggregateInput = {
@@ -10062,22 +10156,22 @@ export namespace Prisma {
     leverage?: SortOrder
   }
 
-  export type EnumTimeframeFilter<$PrismaModel = never> = {
-    equals?: $Enums.Timeframe | EnumTimeframeFieldRefInput<$PrismaModel>
-    in?: $Enums.Timeframe[] | ListEnumTimeframeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Timeframe[] | ListEnumTimeframeFieldRefInput<$PrismaModel>
-    not?: NestedEnumTimeframeFilter<$PrismaModel> | $Enums.Timeframe
+  export type EnumResolutionFilter<$PrismaModel = never> = {
+    equals?: $Enums.Resolution | EnumResolutionFieldRefInput<$PrismaModel>
+    in?: $Enums.Resolution[] | ListEnumResolutionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Resolution[] | ListEnumResolutionFieldRefInput<$PrismaModel>
+    not?: NestedEnumResolutionFilter<$PrismaModel> | $Enums.Resolution
   }
 
-  export type Historical_DataAssetIdTimeframeTimestampCompoundUniqueInput = {
+  export type Historical_DataAssetIdResolutionTimestampCompoundUniqueInput = {
     assetId: string
-    timeframe: $Enums.Timeframe
+    resolution: $Enums.Resolution
     timestamp: Date | string
   }
 
   export type Historical_DataCountOrderByAggregateInput = {
     assetId?: SortOrder
-    timeframe?: SortOrder
+    resolution?: SortOrder
     timestamp?: SortOrder
     open?: SortOrder
     high?: SortOrder
@@ -10096,7 +10190,7 @@ export namespace Prisma {
 
   export type Historical_DataMaxOrderByAggregateInput = {
     assetId?: SortOrder
-    timeframe?: SortOrder
+    resolution?: SortOrder
     timestamp?: SortOrder
     open?: SortOrder
     high?: SortOrder
@@ -10107,7 +10201,7 @@ export namespace Prisma {
 
   export type Historical_DataMinOrderByAggregateInput = {
     assetId?: SortOrder
-    timeframe?: SortOrder
+    resolution?: SortOrder
     timestamp?: SortOrder
     open?: SortOrder
     high?: SortOrder
@@ -10124,14 +10218,14 @@ export namespace Prisma {
     volume?: SortOrder
   }
 
-  export type EnumTimeframeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.Timeframe | EnumTimeframeFieldRefInput<$PrismaModel>
-    in?: $Enums.Timeframe[] | ListEnumTimeframeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Timeframe[] | ListEnumTimeframeFieldRefInput<$PrismaModel>
-    not?: NestedEnumTimeframeWithAggregatesFilter<$PrismaModel> | $Enums.Timeframe
+  export type EnumResolutionWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Resolution | EnumResolutionFieldRefInput<$PrismaModel>
+    in?: $Enums.Resolution[] | ListEnumResolutionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Resolution[] | ListEnumResolutionFieldRefInput<$PrismaModel>
+    not?: NestedEnumResolutionWithAggregatesFilter<$PrismaModel> | $Enums.Resolution
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumTimeframeFilter<$PrismaModel>
-    _max?: NestedEnumTimeframeFilter<$PrismaModel>
+    _min?: NestedEnumResolutionFilter<$PrismaModel>
+    _max?: NestedEnumResolutionFilter<$PrismaModel>
   }
 
   export type TradeCreateNestedManyWithoutAssetInput = {
@@ -10366,7 +10460,7 @@ export namespace Prisma {
     connect?: PositionWhereUniqueInput | PositionWhereUniqueInput[]
   }
 
-  export type IntFieldUpdateOperationsInput = {
+  export type FloatFieldUpdateOperationsInput = {
     set?: number
     increment?: number
     decrement?: number
@@ -10556,8 +10650,16 @@ export namespace Prisma {
     set?: $Enums.Side
   }
 
-  export type NullableIntFieldUpdateOperationsInput = {
+  export type NullableFloatFieldUpdateOperationsInput = {
     set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
     increment?: number
     decrement?: number
     multiply?: number
@@ -10614,8 +10716,8 @@ export namespace Prisma {
     connect?: AssetWhereUniqueInput
   }
 
-  export type EnumTimeframeFieldUpdateOperationsInput = {
-    set?: $Enums.Timeframe
+  export type EnumResolutionFieldUpdateOperationsInput = {
+    set?: $Enums.Resolution
   }
 
   export type AssetUpdateOneRequiredWithoutHistorical_dataNestedInput = {
@@ -10710,22 +10812,6 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
-  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
-  }
-
   export type NestedFloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
     in?: number[] | ListFloatFieldRefInput<$PrismaModel>
@@ -10735,6 +10821,22 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -10783,6 +10885,17 @@ export namespace Prisma {
     not?: NestedEnumSideFilter<$PrismaModel> | $Enums.Side
   }
 
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type NestedEnumOrder_TypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.Order_Type | EnumOrder_TypeFieldRefInput<$PrismaModel>
     in?: $Enums.Order_Type[] | ListEnumOrder_TypeFieldRefInput<$PrismaModel>
@@ -10813,23 +10926,7 @@ export namespace Prisma {
     _max?: NestedEnumSideFilter<$PrismaModel>
   }
 
-  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
     notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -10837,24 +10934,45 @@ export namespace Prisma {
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
-  export type NestedEnumTimeframeFilter<$PrismaModel = never> = {
-    equals?: $Enums.Timeframe | EnumTimeframeFieldRefInput<$PrismaModel>
-    in?: $Enums.Timeframe[] | ListEnumTimeframeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Timeframe[] | ListEnumTimeframeFieldRefInput<$PrismaModel>
-    not?: NestedEnumTimeframeFilter<$PrismaModel> | $Enums.Timeframe
-  }
-
-  export type NestedEnumTimeframeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.Timeframe | EnumTimeframeFieldRefInput<$PrismaModel>
-    in?: $Enums.Timeframe[] | ListEnumTimeframeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Timeframe[] | ListEnumTimeframeFieldRefInput<$PrismaModel>
-    not?: NestedEnumTimeframeWithAggregatesFilter<$PrismaModel> | $Enums.Timeframe
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumTimeframeFilter<$PrismaModel>
-    _max?: NestedEnumTimeframeFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedEnumResolutionFilter<$PrismaModel = never> = {
+    equals?: $Enums.Resolution | EnumResolutionFieldRefInput<$PrismaModel>
+    in?: $Enums.Resolution[] | ListEnumResolutionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Resolution[] | ListEnumResolutionFieldRefInput<$PrismaModel>
+    not?: NestedEnumResolutionFilter<$PrismaModel> | $Enums.Resolution
+  }
+
+  export type NestedEnumResolutionWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Resolution | EnumResolutionFieldRefInput<$PrismaModel>
+    in?: $Enums.Resolution[] | ListEnumResolutionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Resolution[] | ListEnumResolutionFieldRefInput<$PrismaModel>
+    not?: NestedEnumResolutionWithAggregatesFilter<$PrismaModel> | $Enums.Resolution
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumResolutionFilter<$PrismaModel>
+    _max?: NestedEnumResolutionFilter<$PrismaModel>
   }
 
   export type TradeCreateWithoutAssetInput = {
@@ -10892,7 +11010,8 @@ export namespace Prisma {
     side: $Enums.Side
     price?: number | null
     quantity: number
-    filled_quantity?: number | null
+    filled_quantity?: number
+    average_filled_price?: number
     leverage: number
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
@@ -10905,7 +11024,8 @@ export namespace Prisma {
     side: $Enums.Side
     price?: number | null
     quantity: number
-    filled_quantity?: number | null
+    filled_quantity?: number
+    average_filled_price?: number
     userId: string
     leverage: number
     createdAt?: Date | string
@@ -10952,7 +11072,7 @@ export namespace Prisma {
   }
 
   export type Historical_DataCreateWithoutAssetInput = {
-    timeframe: $Enums.Timeframe
+    resolution: $Enums.Resolution
     timestamp: Date | string
     open: number
     high: number
@@ -10962,7 +11082,7 @@ export namespace Prisma {
   }
 
   export type Historical_DataUncheckedCreateWithoutAssetInput = {
-    timeframe: $Enums.Timeframe
+    resolution: $Enums.Resolution
     timestamp: Date | string
     open: number
     high: number
@@ -11004,8 +11124,8 @@ export namespace Prisma {
     id?: StringFilter<"Trade"> | string
     buyerId?: StringFilter<"Trade"> | string
     sellerId?: StringFilter<"Trade"> | string
-    price?: IntFilter<"Trade"> | number
-    quantity?: IntFilter<"Trade"> | number
+    price?: FloatFilter<"Trade"> | number
+    quantity?: FloatFilter<"Trade"> | number
     assetId?: StringFilter<"Trade"> | string
     createdAt?: DateTimeFilter<"Trade"> | Date | string
   }
@@ -11034,9 +11154,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFilter<"Order"> | $Enums.Order_Type
     status?: EnumOrder_StatusFilter<"Order"> | $Enums.Order_Status
     side?: EnumSideFilter<"Order"> | $Enums.Side
-    price?: IntNullableFilter<"Order"> | number | null
-    quantity?: IntFilter<"Order"> | number
-    filled_quantity?: IntNullableFilter<"Order"> | number | null
+    price?: FloatNullableFilter<"Order"> | number | null
+    quantity?: FloatFilter<"Order"> | number
+    filled_quantity?: FloatFilter<"Order"> | number
+    average_filled_price?: FloatFilter<"Order"> | number
     assetId?: StringFilter<"Order"> | string
     userId?: StringFilter<"Order"> | string
     leverage?: IntFilter<"Order"> | number
@@ -11067,8 +11188,8 @@ export namespace Prisma {
     userId?: StringFilter<"Position"> | string
     assetId?: StringFilter<"Position"> | string
     side?: EnumSideFilter<"Position"> | $Enums.Side
-    average_price?: IntFilter<"Position"> | number
-    quantity?: IntFilter<"Position"> | number
+    average_price?: FloatFilter<"Position"> | number
+    quantity?: FloatFilter<"Position"> | number
     leverage?: IntFilter<"Position"> | number
     createdAt?: DateTimeFilter<"Position"> | Date | string
   }
@@ -11094,13 +11215,13 @@ export namespace Prisma {
     OR?: Historical_DataScalarWhereInput[]
     NOT?: Historical_DataScalarWhereInput | Historical_DataScalarWhereInput[]
     assetId?: StringFilter<"Historical_Data"> | string
-    timeframe?: EnumTimeframeFilter<"Historical_Data"> | $Enums.Timeframe
+    resolution?: EnumResolutionFilter<"Historical_Data"> | $Enums.Resolution
     timestamp?: DateTimeFilter<"Historical_Data"> | Date | string
-    open?: IntFilter<"Historical_Data"> | number
-    high?: IntFilter<"Historical_Data"> | number
-    low?: IntFilter<"Historical_Data"> | number
-    close?: IntFilter<"Historical_Data"> | number
-    volume?: IntFilter<"Historical_Data"> | number
+    open?: FloatFilter<"Historical_Data"> | number
+    high?: FloatFilter<"Historical_Data"> | number
+    low?: FloatFilter<"Historical_Data"> | number
+    close?: FloatFilter<"Historical_Data"> | number
+    volume?: FloatFilter<"Historical_Data"> | number
   }
 
   export type TradeCreateWithoutBuyerInput = {
@@ -11166,7 +11287,8 @@ export namespace Prisma {
     side: $Enums.Side
     price?: number | null
     quantity: number
-    filled_quantity?: number | null
+    filled_quantity?: number
+    average_filled_price?: number
     leverage: number
     createdAt?: Date | string
     asset: AssetCreateNestedOneWithoutOrdersInput
@@ -11179,7 +11301,8 @@ export namespace Prisma {
     side: $Enums.Side
     price?: number | null
     quantity: number
-    filled_quantity?: number | null
+    filled_quantity?: number
+    average_filled_price?: number
     assetId: string
     leverage: number
     createdAt?: Date | string
@@ -11319,8 +11442,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     sold?: TradeCreateNestedManyWithoutSellerInput
     orders?: OrderCreateNestedManyWithoutUserInput
     positions?: PositionCreateNestedManyWithoutUserInput
@@ -11331,8 +11455,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     sold?: TradeUncheckedCreateNestedManyWithoutSellerInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
     positions?: PositionUncheckedCreateNestedManyWithoutUserInput
@@ -11348,8 +11473,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     bought?: TradeCreateNestedManyWithoutBuyerInput
     orders?: OrderCreateNestedManyWithoutUserInput
     positions?: PositionCreateNestedManyWithoutUserInput
@@ -11360,8 +11486,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     bought?: TradeUncheckedCreateNestedManyWithoutBuyerInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
     positions?: PositionUncheckedCreateNestedManyWithoutUserInput
@@ -11419,8 +11546,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     sold?: TradeUpdateManyWithoutSellerNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
     positions?: PositionUpdateManyWithoutUserNestedInput
@@ -11431,8 +11559,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     sold?: TradeUncheckedUpdateManyWithoutSellerNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
     positions?: PositionUncheckedUpdateManyWithoutUserNestedInput
@@ -11454,8 +11583,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     bought?: TradeUpdateManyWithoutBuyerNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
     positions?: PositionUpdateManyWithoutUserNestedInput
@@ -11466,8 +11596,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     bought?: TradeUncheckedUpdateManyWithoutBuyerNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
     positions?: PositionUncheckedUpdateManyWithoutUserNestedInput
@@ -11503,8 +11634,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     bought?: TradeCreateNestedManyWithoutBuyerInput
     sold?: TradeCreateNestedManyWithoutSellerInput
     positions?: PositionCreateNestedManyWithoutUserInput
@@ -11515,8 +11647,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     bought?: TradeUncheckedCreateNestedManyWithoutBuyerInput
     sold?: TradeUncheckedCreateNestedManyWithoutSellerInput
     positions?: PositionUncheckedCreateNestedManyWithoutUserInput
@@ -11574,8 +11707,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     bought?: TradeUpdateManyWithoutBuyerNestedInput
     sold?: TradeUpdateManyWithoutSellerNestedInput
     positions?: PositionUpdateManyWithoutUserNestedInput
@@ -11586,8 +11720,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     bought?: TradeUncheckedUpdateManyWithoutBuyerNestedInput
     sold?: TradeUncheckedUpdateManyWithoutSellerNestedInput
     positions?: PositionUncheckedUpdateManyWithoutUserNestedInput
@@ -11623,8 +11758,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     bought?: TradeCreateNestedManyWithoutBuyerInput
     sold?: TradeCreateNestedManyWithoutSellerInput
     orders?: OrderCreateNestedManyWithoutUserInput
@@ -11635,8 +11771,9 @@ export namespace Prisma {
     email: string
     name: string
     password?: string | null
+    total_deposit?: number
     usdc?: number
-    available_margin?: number
+    funding_unpaid?: number
     bought?: TradeUncheckedCreateNestedManyWithoutBuyerInput
     sold?: TradeUncheckedCreateNestedManyWithoutSellerInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -11694,8 +11831,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     bought?: TradeUpdateManyWithoutBuyerNestedInput
     sold?: TradeUpdateManyWithoutSellerNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
@@ -11706,8 +11844,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     password?: NullableStringFieldUpdateOperationsInput | string | null
-    usdc?: IntFieldUpdateOperationsInput | number
-    available_margin?: IntFieldUpdateOperationsInput | number
+    total_deposit?: FloatFieldUpdateOperationsInput | number
+    usdc?: FloatFieldUpdateOperationsInput | number
+    funding_unpaid?: FloatFieldUpdateOperationsInput | number
     bought?: TradeUncheckedUpdateManyWithoutBuyerNestedInput
     sold?: TradeUncheckedUpdateManyWithoutSellerNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -11785,7 +11924,8 @@ export namespace Prisma {
     side: $Enums.Side
     price?: number | null
     quantity: number
-    filled_quantity?: number | null
+    filled_quantity?: number
+    average_filled_price?: number
     userId: string
     leverage: number
     createdAt?: Date | string
@@ -11802,7 +11942,7 @@ export namespace Prisma {
   }
 
   export type Historical_DataCreateManyAssetInput = {
-    timeframe: $Enums.Timeframe
+    resolution: $Enums.Resolution
     timestamp: Date | string
     open: number
     high: number
@@ -11813,8 +11953,8 @@ export namespace Prisma {
 
   export type TradeUpdateWithoutAssetInput = {
     id?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     buyer?: UserUpdateOneRequiredWithoutBoughtNestedInput
     seller?: UserUpdateOneRequiredWithoutSoldNestedInput
@@ -11824,8 +11964,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     buyerId?: StringFieldUpdateOperationsInput | string
     sellerId?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -11833,8 +11973,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     buyerId?: StringFieldUpdateOperationsInput | string
     sellerId?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -11843,9 +11983,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
@@ -11856,9 +11997,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     userId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11869,9 +12011,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     userId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11880,8 +12023,8 @@ export namespace Prisma {
   export type PositionUpdateWithoutAssetInput = {
     id?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutPositionsNestedInput
@@ -11891,8 +12034,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -11901,40 +12044,40 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type Historical_DataUpdateWithoutAssetInput = {
-    timeframe?: EnumTimeframeFieldUpdateOperationsInput | $Enums.Timeframe
+    resolution?: EnumResolutionFieldUpdateOperationsInput | $Enums.Resolution
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
-    open?: IntFieldUpdateOperationsInput | number
-    high?: IntFieldUpdateOperationsInput | number
-    low?: IntFieldUpdateOperationsInput | number
-    close?: IntFieldUpdateOperationsInput | number
-    volume?: IntFieldUpdateOperationsInput | number
+    open?: FloatFieldUpdateOperationsInput | number
+    high?: FloatFieldUpdateOperationsInput | number
+    low?: FloatFieldUpdateOperationsInput | number
+    close?: FloatFieldUpdateOperationsInput | number
+    volume?: FloatFieldUpdateOperationsInput | number
   }
 
   export type Historical_DataUncheckedUpdateWithoutAssetInput = {
-    timeframe?: EnumTimeframeFieldUpdateOperationsInput | $Enums.Timeframe
+    resolution?: EnumResolutionFieldUpdateOperationsInput | $Enums.Resolution
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
-    open?: IntFieldUpdateOperationsInput | number
-    high?: IntFieldUpdateOperationsInput | number
-    low?: IntFieldUpdateOperationsInput | number
-    close?: IntFieldUpdateOperationsInput | number
-    volume?: IntFieldUpdateOperationsInput | number
+    open?: FloatFieldUpdateOperationsInput | number
+    high?: FloatFieldUpdateOperationsInput | number
+    low?: FloatFieldUpdateOperationsInput | number
+    close?: FloatFieldUpdateOperationsInput | number
+    volume?: FloatFieldUpdateOperationsInput | number
   }
 
   export type Historical_DataUncheckedUpdateManyWithoutAssetInput = {
-    timeframe?: EnumTimeframeFieldUpdateOperationsInput | $Enums.Timeframe
+    resolution?: EnumResolutionFieldUpdateOperationsInput | $Enums.Resolution
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
-    open?: IntFieldUpdateOperationsInput | number
-    high?: IntFieldUpdateOperationsInput | number
-    low?: IntFieldUpdateOperationsInput | number
-    close?: IntFieldUpdateOperationsInput | number
-    volume?: IntFieldUpdateOperationsInput | number
+    open?: FloatFieldUpdateOperationsInput | number
+    high?: FloatFieldUpdateOperationsInput | number
+    low?: FloatFieldUpdateOperationsInput | number
+    close?: FloatFieldUpdateOperationsInput | number
+    volume?: FloatFieldUpdateOperationsInput | number
   }
 
   export type TradeCreateManyBuyerInput = {
@@ -11962,7 +12105,8 @@ export namespace Prisma {
     side: $Enums.Side
     price?: number | null
     quantity: number
-    filled_quantity?: number | null
+    filled_quantity?: number
+    average_filled_price?: number
     assetId: string
     leverage: number
     createdAt?: Date | string
@@ -11980,8 +12124,8 @@ export namespace Prisma {
 
   export type TradeUpdateWithoutBuyerInput = {
     id?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutTradesNestedInput
     seller?: UserUpdateOneRequiredWithoutSoldNestedInput
@@ -11990,8 +12134,8 @@ export namespace Prisma {
   export type TradeUncheckedUpdateWithoutBuyerInput = {
     id?: StringFieldUpdateOperationsInput | string
     sellerId?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -11999,16 +12143,16 @@ export namespace Prisma {
   export type TradeUncheckedUpdateManyWithoutBuyerInput = {
     id?: StringFieldUpdateOperationsInput | string
     sellerId?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type TradeUpdateWithoutSellerInput = {
     id?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutTradesNestedInput
     buyer?: UserUpdateOneRequiredWithoutBoughtNestedInput
@@ -12017,8 +12161,8 @@ export namespace Prisma {
   export type TradeUncheckedUpdateWithoutSellerInput = {
     id?: StringFieldUpdateOperationsInput | string
     buyerId?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12026,8 +12170,8 @@ export namespace Prisma {
   export type TradeUncheckedUpdateManyWithoutSellerInput = {
     id?: StringFieldUpdateOperationsInput | string
     buyerId?: StringFieldUpdateOperationsInput | string
-    price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12037,9 +12181,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutOrdersNestedInput
@@ -12050,9 +12195,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12063,9 +12209,10 @@ export namespace Prisma {
     type?: EnumOrder_TypeFieldUpdateOperationsInput | $Enums.Order_Type
     status?: EnumOrder_StatusFieldUpdateOperationsInput | $Enums.Order_Status
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    price?: NullableIntFieldUpdateOperationsInput | number | null
-    quantity?: IntFieldUpdateOperationsInput | number
-    filled_quantity?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    filled_quantity?: FloatFieldUpdateOperationsInput | number
+    average_filled_price?: FloatFieldUpdateOperationsInput | number
     assetId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12074,8 +12221,8 @@ export namespace Prisma {
   export type PositionUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutPositionsNestedInput
@@ -12085,8 +12232,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     assetId?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12095,8 +12242,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     assetId?: StringFieldUpdateOperationsInput | string
     side?: EnumSideFieldUpdateOperationsInput | $Enums.Side
-    average_price?: IntFieldUpdateOperationsInput | number
-    quantity?: IntFieldUpdateOperationsInput | number
+    average_price?: FloatFieldUpdateOperationsInput | number
+    quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

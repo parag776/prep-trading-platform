@@ -132,8 +132,9 @@ exports.Prisma.UserScalarFieldEnum = {
   email: 'email',
   name: 'name',
   password: 'password',
+  total_deposit: 'total_deposit',
   usdc: 'usdc',
-  available_margin: 'available_margin'
+  funding_unpaid: 'funding_unpaid'
 };
 
 exports.Prisma.TradeScalarFieldEnum = {
@@ -154,6 +155,7 @@ exports.Prisma.OrderScalarFieldEnum = {
   price: 'price',
   quantity: 'quantity',
   filled_quantity: 'filled_quantity',
+  average_filled_price: 'average_filled_price',
   assetId: 'assetId',
   userId: 'userId',
   leverage: 'leverage',
@@ -173,7 +175,7 @@ exports.Prisma.PositionScalarFieldEnum = {
 
 exports.Prisma.Historical_DataScalarFieldEnum = {
   assetId: 'assetId',
-  timeframe: 'timeframe',
+  resolution: 'resolution',
   timestamp: 'timestamp',
   open: 'open',
   high: 'high',
@@ -204,7 +206,6 @@ exports.Order_Type = exports.$Enums.Order_Type = {
 exports.Order_Status = exports.$Enums.Order_Status = {
   OPEN: 'OPEN',
   FILLED: 'FILLED',
-  PARTIALLY_FILLED: 'PARTIALLY_FILLED',
   CANCELLED: 'CANCELLED'
 };
 
@@ -213,7 +214,7 @@ exports.Side = exports.$Enums.Side = {
   BID: 'BID'
 };
 
-exports.Timeframe = exports.$Enums.Timeframe = {
+exports.Resolution = exports.$Enums.Resolution = {
   ONE_MINUTE: 'ONE_MINUTE',
   THREE_MINUTE: 'THREE_MINUTE',
   FIVE_MINUTE: 'FIVE_MINUTE',
@@ -226,9 +227,7 @@ exports.Timeframe = exports.$Enums.Timeframe = {
   EIGHT_HOUR: 'EIGHT_HOUR',
   TWELVE_HOUR: 'TWELVE_HOUR',
   ONE_DAY: 'ONE_DAY',
-  THREE_DAY: 'THREE_DAY',
-  ONE_WEEK: 'ONE_WEEK',
-  ONE_MONTH: 'ONE_MONTH'
+  ONE_WEEK: 'ONE_WEEK'
 };
 
 exports.Prisma.ModelName = {

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prepare": "next-ws patch",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -10,13 +11,26 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.7.0",
+    "@types/functional-red-black-tree": "^1.0.6",
+    "@types/next-auth": "^3.15.0",
     "@types/recoil": "^0.0.9",
+    "@types/ws": "^8.18.1",
+    "axios": "^1.9.0",
+    "functional-red-black-tree": "^1.0.1",
     "next": "15.3.2",
+    "next-auth": "^4.24.11",
+    "next-ws": "^2.0.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recoil": "^0.7.7"
+    "recoil": "^0.7.7",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.2",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

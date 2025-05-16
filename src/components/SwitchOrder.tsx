@@ -1,4 +1,4 @@
-import { Side } from '@/lib/orderbook'
+import { Side } from '@/lib/frontend/orderbook'
 import { useState } from 'react'
 import React from 'react'
 

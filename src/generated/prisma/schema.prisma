@@ -23,7 +23,6 @@ enum Order_Type {
 enum Order_Status {
   OPEN
   FILLED
-  PARTIALLY_FILLED
   CANCELLED
 }
 
@@ -32,7 +31,7 @@ enum Side {
   BID
 }
 
-enum Timeframe {
+enum Resolution {
   ONE_MINUTE
   THREE_MINUTE
   FIVE_MINUTE
@@ -45,16 +44,14 @@ enum Timeframe {
   EIGHT_HOUR
   TWELVE_HOUR
   ONE_DAY
-  THREE_DAY
   ONE_WEEK
-  ONE_MONTH
 }
 
 // models
 
 model Asset {
   id              String            @id @default(uuid())
-  symbol          String
+  symbol          String            @unique
   name            String
   img_url         String?
   trades          Trade[]
@@ -64,24 +61,25 @@ model Asset {
 }
 
 model User {
-  id               String     @id @default(uuid())
-  email            String     @unique
-  name             String
-  password         String?
-  usdc             Int        @default(0)
-  available_margin Int        @default(0)
-  bought           Trade[]    @relation("bought")
-  sold             Trade[]    @relation("sold")
-  orders           Order[]
-  positions        Position[]
+  id             String     @id @default(uuid())
+  email          String     @unique
+  name           String
+  password       String?
+  total_deposit  Float      @default(0)
+  usdc           Float      @default(0)
+  funding_unpaid Float      @default(0)
+  bought         Trade[]    @relation("bought")
+  sold           Trade[]    @relation("sold")
+  orders         Order[]
+  positions      Position[]
 }
 
 model Trade {
   id       String @id @default(uuid())
   buyerId  String
   sellerId String
-  price    Int
-  quantity Int
+  price    Float
+  quantity Float
   assetId  String
 
   asset     Asset    @relation(fields: [assetId], references: [id])
@@ -94,17 +92,18 @@ model Trade {
 
 // orderbook can be extracted from here open orders.
 model Order {
-  id              String       @id @default(uuid())
-  type            Order_Type
-  status          Order_Status
-  side            Side
-  price           Int?
-  quantity        Int
-  filled_quantity Int?
-  assetId         String
-  userId          String
-  leverage        Int
-  createdAt       DateTime     @default(now())
+  id                   String       @id @default(uuid())
+  type                 Order_Type
+  status               Order_Status
+  side                 Side
+  price                Float?
+  quantity             Float
+  filled_quantity      Float        @default(0)
+  average_filled_price Float        @default(0)
+  assetId              String
+  userId               String
+  leverage             Int
+  createdAt            DateTime     @default(now())
 
   asset Asset @relation(fields: [assetId], references: [id])
   // @@index(type: Hash, [status]) // for getting the order book. // but won't need because only useful incase of crash. at that time, just go through whole table.
@@ -118,8 +117,8 @@ model Position {
   userId        String
   assetId       String
   side          Side
-  average_price Int
-  quantity      Int
+  average_price Float
+  quantity      Float
   leverage      Int
   createdAt     DateTime @default(now())
 
@@ -134,18 +133,37 @@ model Position {
 
 // ^^^^^^ nevermind won't need it because can be calculated from orders. ^^^^^^^^
 
-model Historical_Data {
-  assetId   String
-  timeframe Timeframe
-  timestamp DateTime
-  open      Int
-  high      Int
-  low       Int
-  close     Int
-  volume    Int
-  asset     Asset     @relation(fields: [assetId], references: [id])
+// model Fees{
+//   id String @id @default(uuid())
+//   orderId String
+//   isMaker Boolean
+//   isPaid Boolean
+//   amount Float
 
-  @@id([assetId, timeframe, timestamp])
+//   order Order @relation(fields: [orderId], references: [id])
+//   @@index([orderId, isMaker, isPaid], type: Hash)
+// }
+
+// model Funding{
+//   id String @id @default(uuid())
+//   isPaid Boolean
+//   amount Float
+//   createdAt DateTime @default(now())
+
+// }
+
+model Historical_Data {
+  assetId    String
+  resolution Resolution
+  timestamp  DateTime
+  open       Float
+  high       Float
+  low        Float
+  close      Float
+  volume     Float
+  asset      Asset      @relation(fields: [assetId], references: [id])
+
+  @@id([assetId, resolution, timestamp])
 }
 
 // create history, add margins to user, etc. sleep for 20 minutes

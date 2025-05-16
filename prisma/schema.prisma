@@ -23,7 +23,6 @@ enum Order_Type {
 enum Order_Status {
   OPEN
   FILLED
-  PARTIALLY_FILLED
   CANCELLED
 }
 
@@ -46,14 +45,13 @@ enum Resolution {
   TWELVE_HOUR
   ONE_DAY
   ONE_WEEK
-  ONE_MONTH
 }
 
 // models
 
 model Asset {
   id              String            @id @default(uuid())
-  symbol          String
+  symbol          String            @unique
   name            String
   img_url         String?
   trades          Trade[]
@@ -63,53 +61,53 @@ model Asset {
 }
 
 model User {
-  id               String     @id @default(uuid())
-  email            String     @unique
-  name             String
-  password         String?
-  usdc             Float        @default(0)
-  funding_unpaid Float @default(0)
-  bought           Trade[]    @relation("bought")
-  sold             Trade[]    @relation("sold")
-  orders           Order[]
-  positions        Position[]
+  id             String     @id @default(uuid())
+  email          String     @unique
+  name           String
+  password       String?
+  total_deposit  Float      @default(0)
+  usdc           Float      @default(0)
+  funding_unpaid Float      @default(0)
+  bought         Trade[]    @relation("bought")
+  sold           Trade[]    @relation("sold")
+  orders         Order[]
+  positions      Position[]
 }
 
 model Trade {
-  id         String    @id @default(uuid())
-  buyerId String
-  sellerId   String
-  price      Float
-  quantity   Int
-  assetId    String
-
-  asset     Asset    @relation(fields: [assetId], references: [id])
-  buyer     User     @relation(name: "bought", fields: [buyerId], references: [id])
-  seller    User     @relation(name: "sold", fields: [sellerId], references: [id])
+  id        String   @id @default(uuid())
+  buyerId   String
+  sellerId  String
+  price     Float
+  quantity  Float
+  assetId   String
   createdAt DateTime @default(now())
+
+  asset  Asset @relation(fields: [assetId], references: [id])
+  buyer  User  @relation(name: "bought", fields: [buyerId], references: [id])
+  seller User  @relation(name: "sold", fields: [sellerId], references: [id])
 
   // @@index([createdAt])  // but won't need because only useful incase of crash. at that time, just go through whole table.
 }
 
 // orderbook can be extracted from here open orders.
 model Order {
-  id        String          @id @default(uuid())
-  type      Order_Type
-  status    Order_Status
-  side      Side
-  price     Float?
-  quantity  Int
-  filled_quantity Int?
-  average_filled_price Float?
-  assetId   String
-  userId    String
-  leverage  Int
-  createdAt DateTime     @default(now())
+  id                   String       @id @default(uuid())
+  type                 Order_Type
+  status               Order_Status
+  side                 Side
+  price                Float?
+  quantity             Float
+  filled_quantity      Float        @default(0)
+  average_filled_price Float        @default(0)
+  assetId              String
+  userId               String
+  leverage             Int
+  createdAt            DateTime     @default(now())
 
   asset Asset @relation(fields: [assetId], references: [id])
   // @@index(type: Hash, [status]) // for getting the order book. // but won't need because only useful incase of crash. at that time, just go through whole table.
   user  User  @relation(fields: [userId], references: [id])
-
 
   @@index([userId, status, assetId])
 }
@@ -120,7 +118,7 @@ model Position {
   assetId       String
   side          Side
   average_price Float
-  quantity      Int
+  quantity      Float
   leverage      Int
   createdAt     DateTime @default(now())
 
@@ -155,15 +153,15 @@ model Position {
 // }
 
 model Historical_Data {
-  assetId   String
+  assetId    String
   resolution Resolution
-  timestamp DateTime
-  open      Float
-  high      Float
-  low       Float
-  close     Float
-  volume    Int
-  asset     Asset     @relation(fields: [assetId], references: [id])
+  timestamp  DateTime
+  open       Float
+  high       Float
+  low        Float
+  close      Float
+  volume     Float
+  asset      Asset      @relation(fields: [assetId], references: [id])
 
   @@id([assetId, resolution, timestamp])
 }

@@ -22,29 +22,45 @@ import createRBTree from "functional-red-black-tree";
 import { ResolutionInfo } from "../common/types";
 import config from "../../../config.json"
 import { calculateMaintenanceMargin, calculateMarginWithoutFee, calculateMarginWithFee, getContractPrice } from "./utils";
+import { fetchSpotPrices } from "./spotFetcher";
+import axios from "axios";
 
 const prisma = new PrismaClient();
 
 export let assets: Asset[];
+export let symbolToAssetId: Map<Asset["symbol"], Asset["id"]>;
 export let orderbooks: Map<Asset["id"], OrderBook>;
 export let latestCandles: LatestCandleByAssetAndResolution;
 export let detailedUsersState: Map<User["id"], UserWithPositionsAndOpenOrders>;
-
+export let spotPrices: Map<Asset["id"], number>;
 
 
 
 async function getAssets() {
-  return await prisma.asset.findMany();
+  assets = await prisma.asset.findMany();
+  symbolToAssetId = new Map(assets.map((asset)=>[asset.symbol, asset.id]));
+
+}
+
+async function getSpotPrices(){
+  try{
+    spotPrices = new Map(await Promise.all(assets.map(async (asset)=>{
+      const res = await axios.get(`https://api4.binance.com/api/v3/ticker/price?symbol=${asset.symbol}USDC`);
+      return [asset.id, Number(res.data.price)] as [Asset["id"], number];
+    })))
+  } catch(e){
+    spotPrices = new Map();
+  }
 }
 
 async function getOrderbooks() {
-  return new Map<Asset["id"], OrderBook>(
+  orderbooks = new Map<Asset["id"], OrderBook>(
     await Promise.all(
       assets.map(async (asset: Asset) => {
         const orders = (await prisma.order.findMany({
           where: {
             status: {
-              in: ["OPEN", "PARTIALLY_FILLED"],
+              in: ["OPEN"],
             },
             asset,
           },
@@ -89,7 +105,9 @@ async function getOrderbooks() {
           }
         );
 
+        let latestOrder = 0;
         for (let order of orders) {
+          latestOrder = Math.max(order.createdAt.getTime(), latestOrder);
           if (order.side === Side.ASK) {
             askOrders.insert(order, null);
           } else {
@@ -107,6 +125,7 @@ async function getOrderbooks() {
         };
 
         const orderbook: OrderBook = {
+          lastOrderTimestamp: new Date(latestOrder),
           asset: asset.id,
           askOrderbook,
           bidOrderbook,
@@ -120,7 +139,7 @@ async function getOrderbooks() {
 
 async function getLatestCandles(){
 
-    const latestCandles = new Map<{assetId: Asset["id"], resolution: Resolution}, Candle>();
+    latestCandles = new Map<{assetId: Asset["id"], resolution: Resolution}, Candle>();
     for(const asset of assets){
 
         for(const resolution of Object.values(Resolution)){
@@ -150,7 +169,6 @@ async function getLatestCandles(){
             latestCandles.set({assetId: asset.id, resolution}, data || defaultCandle)
         }
     }
-    return latestCandles;
 }
 
 
@@ -174,7 +192,6 @@ async function getDetailedUsersState(){
         }
     });
 
-    const detailedUsersState = new Map<User["id"], UserWithPositionsAndOpenOrders>();
 
     // make positions
     for(let user of usersWithPositions){
@@ -190,7 +207,7 @@ async function getDetailedUsersState(){
         for(let position of user.positions){
 
             detailedUserState.nonCashEquity += calculateMarginWithoutFee(position.average_price, position.quantity, position.leverage)// initial margin
-            detailedUserState.maintenanceMargin+=calculateMaintenanceMargin(position.average_price, position.quantity) // maintainance margin
+            detailedUserState.maintenanceMargin += calculateMaintenanceMargin(position.average_price, position.quantity) // maintainance margin
 
             const pnl = (position.average_price - getContractPrice(position.assetId))*position.quantity;
             detailedUserState.nonCashEquity+=pnl;
@@ -203,13 +220,13 @@ async function getDetailedUsersState(){
 
     const orders = await prisma.order.findMany({
         where: {
-            OR: [{status: Order_Status.OPEN}, {status: Order_Status.PARTIALLY_FILLED}]
+            status: Order_Status.OPEN
         }
     });
 
     for(const order of orders){
         const extendedUser = detailedUsersState.get(order.userId)!;
-        const remainingQuantity = order.quantity - (order.filled_quantity || 0);
+        const remainingQuantity = order.quantity - order.filled_quantity;
 
         // since its order margin you should block fees also, bro you almost forgot it and could have included 
         // potentially a hazardous bug in your system.
@@ -218,18 +235,18 @@ async function getDetailedUsersState(){
 
         extendedUser.orders.push({...order, price: order.price!})
     }
-    return detailedUsersState;
+    detailedUsersState;
 }
 
 // include here
 async function getInitialData() {
   
-  assets = await getAssets();
-  orderbooks = await getOrderbooks();
-  latestCandles = await getLatestCandles();
-  detailedUsersState = await getDetailedUsersState();
-  
-
+  await getAssets();
+  await getOrderbooks();
+  await getLatestCandles();
+  await getDetailedUsersState();
+  await getSpotPrices();
+  fetchSpotPrices();
 
   //   orderbooks = new Map<Asset["id"], OrderBook>(orderbookEntities);
 
@@ -237,3 +254,5 @@ async function getInitialData() {
 
   // getting positions
 }
+
+await getInitialData();

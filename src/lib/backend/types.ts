@@ -19,6 +19,7 @@ export interface HalfOrderBook {
 }
 
 export interface OrderBook {
+  lastOrderTimestamp: Date;
   asset: Asset["id"];
   askOrderbook: HalfOrderBook;
   bidOrderbook: HalfOrderBook;
@@ -33,7 +34,7 @@ export interface Candle {
   volume: number;
 }
 
-// here non cash equity = IM of positions, due fee, due funding, pnl of positions
+// here non cash equity = IM of positions, due funding, pnl of positions
 // here order margin = IM of open and partially fullfilled orders.
 // here maintainence margin is
 
