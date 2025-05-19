@@ -193,6 +193,7 @@ async function getDetailedUsersState(){
     });
 
 
+    detailedUsersState = new Map<User["id"], UserWithPositionsAndOpenOrders>();
     // make positions
     for(let user of usersWithPositions){
 

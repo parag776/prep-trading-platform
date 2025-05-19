@@ -1,12 +1,12 @@
+import { Side } from "@/generated/prisma";
 import {Trade, TradeBook, insertIntoTradebook} from "@/lib/frontend/tradebook";
-import { Side } from "@/lib/frontend/orderbook";
 
 test("tradebook: insert into tradebook", ()=>{
 
     const trade: Trade = {
         price: 10.2,
         quantity: 20,
-        side: Side.Ask,
+        side: Side.ASK,
         timestamp: 1234
     }
 
@@ -15,7 +15,7 @@ test("tradebook: insert into tradebook", ()=>{
         trades: [{
             price: 10.2,
             quantity: 10,
-            side: Side.Ask,
+            side: Side.ASK,
             timestamp: 5333
         }]
     };
@@ -25,13 +25,13 @@ test("tradebook: insert into tradebook", ()=>{
         trades: [{
             price: 10.2,
             quantity: 10,
-            side: Side.Ask,
+            side: Side.ASK,
             timestamp: 5333
         },
         {
             price: 10.2,
             quantity: 20,
-            side: Side.Ask,
+            side: Side.ASK,
             timestamp: 1234
         }]
     }
@@ -47,7 +47,7 @@ test("tradebook: insert into tradebook with max size", ()=>{
     const trade: Trade = {
         price: 11,
         quantity: 20,
-        side: Side.Ask,
+        side: Side.ASK,
         timestamp: 1234,
     }
 
@@ -56,13 +56,13 @@ test("tradebook: insert into tradebook with max size", ()=>{
         trades: [{
             price: 10.2,
             quantity: 10,
-            side: Side.Ask,
+            side: Side.ASK,
             timestamp: 2345 
         },
         {
             price: 13,
             quantity: 20,
-            side: Side.Ask,
+            side: Side.ASK,
             timestamp: 3456
         }
     ]
@@ -73,13 +73,13 @@ test("tradebook: insert into tradebook with max size", ()=>{
         trades: [{
             price: 13,
             quantity: 20,
-            side: Side.Ask,
+            side: Side.ASK,
             timestamp:3456
         },
         {
             price: 11,
             quantity: 20,
-            side: Side.Ask,
+            side: Side.ASK,
             timestamp: 1234,
         }]
     }

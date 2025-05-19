@@ -179,7 +179,7 @@ function fillOrder(databaseQueryArray: Array<()=>Prisma.PrismaPromise<any>>, ord
 
 }
 
-function matchingEngine(order: Order){
+export function matchingEngine(order: Order){
 
     const user = detailedUsersState.get(order.userId)!;
     const marginRequired = calculateMarginRequirement(order);

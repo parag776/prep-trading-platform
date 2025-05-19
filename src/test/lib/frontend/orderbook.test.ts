@@ -1,27 +1,28 @@
+import { Side } from "@/generated/prisma";
+import { HalfOrderBookLite, OrderLite } from "@/lib/common/types";
 import { updateHalfOrderBook } from "@/lib/frontend/orderbook";
-import { HalfOrderBook, Order, Side, CumulativeOrder } from "@/lib/frontend/orderbook";
 
 test("updateHalfOrderBook: from orders to empty", ()=>{
-    let orderbook: HalfOrderBook<Side.Bid> = {
-        side: Side.Bid,
+    let orderbook: HalfOrderBookLite = {
+        side: Side.BID,
         orders: [{
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 10,
             quantity: 20,
             cumulativeQuantity: 20,
         }]
     }
 
-    let updates: Array<Order> = [{
-        side: Side.Bid,
+    let updates: Array<OrderLite> = [{
+        side: Side.BID,
         price: 10,
         quantity: 0
     }]
 
     updateHalfOrderBook(orderbook, updates);
 
-    let resultOrderBook: HalfOrderBook<Side.Bid> = {
-        side: Side.Bid,
+    let resultOrderBook: HalfOrderBookLite = {
+        side: Side.BID,
         orders: [],
     }
 
@@ -29,23 +30,23 @@ test("updateHalfOrderBook: from orders to empty", ()=>{
 })
 
 test("updateHalfOrderBook: from empty to orders", ()=>{
-    let orderbook: HalfOrderBook<Side.Bid> = {
-        side: Side.Bid,
+    let orderbook: HalfOrderBookLite = {
+        side: Side.BID,
         orders: []
     }
 
-    let updates: Array<Order> = [{
-        side: Side.Bid,
+    let updates: Array<OrderLite> = [{
+        side: Side.BID,
         price: 10,
         quantity: 12
     }]
 
     updateHalfOrderBook(orderbook, updates);
 
-    let resultOrderBook: HalfOrderBook<Side.Bid> = {
-        side: Side.Bid,
+    let resultOrderBook: HalfOrderBookLite = {
+        side: Side.BID,
         orders: [{
-            side:  Side.Bid,
+            side:  Side.BID,
             price: 10,
             quantity: 12,
             cumulativeQuantity: 12,
@@ -56,60 +57,60 @@ test("updateHalfOrderBook: from empty to orders", ()=>{
 })
 
 test("updateHalfOrderBook: major test", ()=>{
-    let orderbook: HalfOrderBook<Side.Ask> = {
-        side: Side.Ask,
+    let orderbook: HalfOrderBookLite = {
+        side: Side.ASK,
         orders: [{
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 10,
             quantity: 20,
             cumulativeQuantity: 20,
         },
         {
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 11,
             quantity: 18,
             cumulativeQuantity: 38,
         },
         {
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 15,
             quantity: 5,
             cumulativeQuantity: 43,
         }]
     }
 
-    let updates: Array<Order> = [{
-        side: Side.Ask,
+    let updates: Array<OrderLite> = [{
+        side: Side.ASK,
         price: 10,
         quantity: 30
     },
     {
-        side: Side.Ask,
+        side: Side.ASK,
         price: 14,
         quantity: 7
     },
     {
-        side: Side.Ask,
+        side: Side.ASK,
         price: 15,
         quantity: 0
     }]
 
-    let resultOrderBook: HalfOrderBook<Side.Ask> = {
-        side: Side.Ask,
+    let resultOrderBook: HalfOrderBookLite = {
+        side: Side.ASK,
         orders: [{
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 10,
             quantity: 30,
             cumulativeQuantity: 30,
         },
         {
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 11,
             quantity: 18,
             cumulativeQuantity: 48,
         },
         {
-            side: Side.Ask,
+            side: Side.ASK,
             price: 14,
             quantity: 7, 
             cumulativeQuantity: 55
@@ -122,65 +123,65 @@ test("updateHalfOrderBook: major test", ()=>{
 })
 
 test("updateHalfOrderBook: major test 2", ()=>{
-    let orderbook: HalfOrderBook<Side.Ask> = {
-        side: Side.Ask,
+    let orderbook: HalfOrderBookLite = {
+        side: Side.ASK,
         orders: [{
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 10,
             quantity: 20,
             cumulativeQuantity: 20,
         },
         {
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 11,
             quantity: 18,
             cumulativeQuantity: 38,
         },
         {
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 15,
             quantity: 5,
             cumulativeQuantity: 43,
         }]
     }
 
-    let updates: Array<Order> = [{
-        side: Side.Ask,
+    let updates: Array<OrderLite> = [{
+        side: Side.ASK,
         price: 10,
         quantity: 0
     },
     {
-        side: Side.Ask,
+        side: Side.ASK,
         price: 14.1,
         quantity: 7
     },
     {
-        side: Side.Ask,
+        side: Side.ASK,
         price: 15,
         quantity: 0
     },
     {
-        side: Side.Ask,
+        side: Side.ASK,
         price: 20,
         quantity: 12,
     }]
 
-    let resultOrderBook: HalfOrderBook<Side.Ask> = {
-        side: Side.Ask,
+    let resultOrderBook: HalfOrderBookLite = {
+        side: Side.ASK,
         orders: [{
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 11,
             quantity: 18,
             cumulativeQuantity: 18,
         },
         {
-            side:  Side.Ask,
+            side:  Side.ASK,
             price: 14.1,
             quantity: 7,
             cumulativeQuantity: 25,
         },
         {
-            side: Side.Ask,
+            side: Side.ASK,
             price: 20,
             quantity: 12, 
             cumulativeQuantity: 37

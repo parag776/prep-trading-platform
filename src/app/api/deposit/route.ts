@@ -1,18 +1,14 @@
 import { User } from "@/generated/prisma";
 import { sessionWrapper } from "../sessionWrapper";
-import z from "zod";
 import { detailedUsersState } from "@/lib/backend/store";
 import prisma from "@/lib/backend/database";
+import { depositValidation } from "@/lib/backend/validations/miscValidations";
 
 export const POST = sessionWrapper(async (req: Request, userId: User["id"])=>{
 
     const body = await req.json();
 
-    const validate = z.object({
-        amount: z.coerce.number().min(0)
-    })
-
-    const {amount} = validate.parse(body);
+    const {amount} = depositValidation.parse(body);
     const curUser = detailedUsersState.get(userId)!;
     curUser.total_deposit+=amount;
     curUser.usdc+=amount;

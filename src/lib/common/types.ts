@@ -1,4 +1,4 @@
-import { Resolution, Side } from "@/generated/prisma";
+import { Asset, Resolution, Side } from "@/generated/prisma";
 export type ResolutionInfo = Map<
   Resolution,
   { symbol: string; duration: number }
