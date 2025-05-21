@@ -66,7 +66,7 @@ async function getOrderbooks() {
           },
         })) as OrderWithRequiredPrice[];
 
-        const askOrders = createRBTree<OrderWithRequiredPrice, null>(
+        let askOrders = createRBTree<OrderWithRequiredPrice, null>(
           (key1: OrderWithRequiredPrice, key2: OrderWithRequiredPrice) => {
             if (key1.price === key2.price) {
               if (key1.createdAt < key2.createdAt) {
@@ -85,7 +85,7 @@ async function getOrderbooks() {
           }
         );
 
-        const bidOrders = createRBTree<OrderWithRequiredPrice, null>(
+        let bidOrders = createRBTree<OrderWithRequiredPrice, null>(
           (key1: OrderWithRequiredPrice, key2: OrderWithRequiredPrice) => {
             if (key1.price === key2.price) {
               if (key1.createdAt < key2.createdAt) {
@@ -105,13 +105,11 @@ async function getOrderbooks() {
           }
         );
 
-        let latestOrder = 0;
         for (let order of orders) {
-          latestOrder = Math.max(order.createdAt.getTime(), latestOrder);
           if (order.side === Side.ASK) {
-            askOrders.insert(order, null);
+            askOrders = askOrders.insert(order, null);
           } else {
-            bidOrders.insert(order, null);
+            bidOrders = bidOrders.insert(order, null);
           }
         }
 
@@ -125,7 +123,6 @@ async function getOrderbooks() {
         };
 
         const orderbook: OrderBook = {
-          lastOrderTimestamp: new Date(latestOrder),
           asset: asset.id,
           askOrderbook,
           bidOrderbook,
@@ -190,7 +187,7 @@ async function getDetailedUsersState(){
         include: {
             positions: true
         }
-    });
+    }); 
 
 
     detailedUsersState = new Map<User["id"], UserWithPositionsAndOpenOrders>();
@@ -199,21 +196,22 @@ async function getDetailedUsersState(){
 
         const detailedUserState: UserWithPositionsAndOpenOrders = {
             ...user,
-            nonCashEquity: 0,
+            InitialMargin: 0,
+            pnl: 0,
             maintenanceMargin: 0,
             orderMargin: 0,
-            positions: [],
-            orders: [],
+            positions: new Map<Asset["id"], positionWithPNL>(),
+            orders: new Map<OrderWithRequiredPrice["id"], OrderWithRequiredPrice>(),
         }
         for(let position of user.positions){
 
-            detailedUserState.nonCashEquity += calculateMarginWithoutFee(position.average_price, position.quantity, position.leverage)// initial margin
+            detailedUserState.InitialMargin += calculateMarginWithoutFee(position.average_price, position.quantity, position.leverage)// initial margin
             detailedUserState.maintenanceMargin += calculateMaintenanceMargin(position.average_price, position.quantity) // maintainance margin
 
             const pnl = (position.average_price - getContractPrice(position.assetId))*position.quantity;
-            detailedUserState.nonCashEquity+=pnl;
+            detailedUserState.pnl+=pnl;
 
-            detailedUserState.positions.push({...position, pnl});
+            detailedUserState.positions.set(position.assetId, ({...position, pnl}));
         }
         detailedUsersState.set(user.id, detailedUserState);
     }
@@ -225,7 +223,7 @@ async function getDetailedUsersState(){
         }
     });
 
-    for(const order of orders){
+    const addOrder =  (order: OrderWithRequiredPrice)=>{
         const extendedUser = detailedUsersState.get(order.userId)!;
         const remainingQuantity = order.quantity - order.filled_quantity;
 
@@ -234,9 +232,17 @@ async function getDetailedUsersState(){
         // this bug would have been so dangerous that, you could never have figured it out.
         extendedUser.orderMargin+=calculateMarginWithFee(remainingQuantity, order.price!, order.leverage, config.maker_fee);
 
-        extendedUser.orders.push({...order, price: order.price!})
+        extendedUser.orders.set(order.id, order)
     }
-    detailedUsersState;
+
+    for(const [assetId, orderbook] of orderbooks){
+      for(const order of orderbook.askOrderbook.orders.keys){
+        addOrder(order);
+      }
+      for(const order of orderbook.bidOrderbook.orders.keys){
+        addOrder(order);
+      }
+    }
 }
 
 // include here
