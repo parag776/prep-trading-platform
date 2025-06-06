@@ -44,7 +44,6 @@ enum Resolution {
   EIGHT_HOUR
   TWELVE_HOUR
   ONE_DAY
-  ONE_WEEK
 }
 
 // models
@@ -64,6 +63,7 @@ model User {
   id             String     @id @default(uuid())
   email          String     @unique
   name           String
+  img_url        String?
   password       String?
   total_deposit  Float      @default(0)
   usdc           Float      @default(0)
@@ -75,19 +75,19 @@ model User {
 }
 
 model Trade {
-  id       String @id @default(uuid())
-  buyerId  String
-  sellerId String
-  price    Float
-  quantity Float
-  assetId  String
-
-  asset     Asset    @relation(fields: [assetId], references: [id])
-  buyer     User     @relation(name: "bought", fields: [buyerId], references: [id])
-  seller    User     @relation(name: "sold", fields: [sellerId], references: [id])
+  id        String   @id @default(uuid())
+  buyerId   String
+  sellerId  String
+  price     Float
+  quantity  Float
+  assetId   String
   createdAt DateTime @default(now())
 
-  // @@index([createdAt])  // but won't need because only useful incase of crash. at that time, just go through whole table.
+  asset  Asset @relation(fields: [assetId], references: [id])
+  buyer  User  @relation(name: "bought", fields: [buyerId], references: [id])
+  seller User  @relation(name: "sold", fields: [sellerId], references: [id])
+
+  @@index([createdAt(sort: Desc)])
 }
 
 // orderbook can be extracted from here open orders.
@@ -104,10 +104,11 @@ model Order {
   userId               String
   leverage             Int
   createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @default(now())
 
   asset Asset @relation(fields: [assetId], references: [id])
   // @@index(type: Hash, [status]) // for getting the order book. // but won't need because only useful incase of crash. at that time, just go through whole table.
-  user  User  @relation(fields: [userId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status, assetId])
 }
@@ -121,6 +122,7 @@ model Position {
   quantity      Float
   leverage      Int
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
 
   asset Asset @relation(fields: [assetId], references: [id])
   user  User  @relation(fields: [userId], references: [id])

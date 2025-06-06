@@ -8,6 +8,7 @@ import {
 } from "@/lib/backend/validations/wsValidations";
 import { ZodError } from "zod";
 import { AppError } from "@/lib/common/error";
+import { handleClientConnect, handleClientDisconnect } from "@/lib/backend/webSockets/utils";
 
 export const GET = requestWrapper(async (req: Request) => {
 	const headers = new Headers();
@@ -19,17 +20,21 @@ export const GET = requestWrapper(async (req: Request) => {
 export const SOCKET = socketSessionWrapper(
 	(client: WebSocket, server: WebSocketServer, userId: User["id"] | null) => {
 
-    
+		// on connection ----------------->>> this is on connection
+		handleClientConnect(client);
 
+		// on close ---------------------->>> this is on disconnection
+		client.on(`close`, ()=>{
+			handleClientDisconnect(client);
+		})
+
+		// this is on message ------------->>>
 		client.on("message", (message) => {
 			try {
 				const messageObj = JSON.parse(message.toString());
 				const validatedMessage = getWsMessageValidation(userId).parse(messageObj);
 
 				client.send(JSON.stringify(validatedMessage));
-
-
-
 			} catch (e) {
 				if (e instanceof ZodError) {
 					client.send(
@@ -46,13 +51,13 @@ export const SOCKET = socketSessionWrapper(
 						})
 					);
 				} else {
-          client.send(
-            JSON.stringify({
-              status: 500,
-              message: "internal server error",
-            })
-          )
-        }
+					client.send(
+						JSON.stringify({
+							status: 500,
+							message: "internal server error",
+						})
+					);
+				}
 			}
 		});
 	}

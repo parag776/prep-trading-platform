@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.7.0
- * Query Engine version: 3cff47a7f5d65c3ea74883f1d736e41d68ce91ed
+ * Prisma Client JS version: 6.8.2
+ * Query Engine version: 2060c79ba17c6bb9f5823312b6f6b7f4a845738e
  */
 Prisma.prismaVersion = {
-  client: "6.7.0",
-  engine: "3cff47a7f5d65c3ea74883f1d736e41d68ce91ed"
+  client: "6.8.2",
+  engine: "2060c79ba17c6bb9f5823312b6f6b7f4a845738e"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -131,6 +131,7 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   name: 'name',
+  img_url: 'img_url',
   password: 'password',
   total_deposit: 'total_deposit',
   usdc: 'usdc',
@@ -159,7 +160,8 @@ exports.Prisma.OrderScalarFieldEnum = {
   assetId: 'assetId',
   userId: 'userId',
   leverage: 'leverage',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.PositionScalarFieldEnum = {
@@ -170,7 +172,8 @@ exports.Prisma.PositionScalarFieldEnum = {
   average_price: 'average_price',
   quantity: 'quantity',
   leverage: 'leverage',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.Historical_DataScalarFieldEnum = {
@@ -226,8 +229,7 @@ exports.Resolution = exports.$Enums.Resolution = {
   SIX_HOUR: 'SIX_HOUR',
   EIGHT_HOUR: 'EIGHT_HOUR',
   TWELVE_HOUR: 'TWELVE_HOUR',
-  ONE_DAY: 'ONE_DAY',
-  ONE_WEEK: 'ONE_WEEK'
+  ONE_DAY: 'ONE_DAY'
 };
 
 exports.Prisma.ModelName = {

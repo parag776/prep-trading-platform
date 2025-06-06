@@ -16,7 +16,6 @@ export let resolutionInfo: ResolutionInfo = new Map<
    [Resolution.EIGHT_HOUR, {symbol: "480", duration: 480 * 1000 * 60 }],
    [Resolution.TWELVE_HOUR, {symbol: "720", duration: 720 * 1000 * 60 }],
    [Resolution.ONE_DAY, {symbol: "D", duration: 24 * 60 * 1000 * 60 }],
-   [Resolution.ONE_WEEK, {symbol: "W", duration: 7 * 24 * 60 * 1000 * 60 }],
 ]);
 
 export let resolutionSymbols = ["1", "3", "5", "15", "30", "60", "120", "240", "360", "480", "720", "D", "W"];

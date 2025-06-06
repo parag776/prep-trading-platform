@@ -1,28 +1,61 @@
-import { User } from "@/generated/prisma";
+import { Asset, User } from "@/generated/prisma";
 import {
-	OpenOrdersDiffResponse,
-	PositionsDiffResponse,
+	OrderDiffResponse,
+	PositionDiffResponse,
 	OrderbookDiffResponse,
 	TradeResponse,
+	SubscribeMessage,
 } from "@/lib/common/types";
+import WebSocket from "ws";
 
-export const orderbookSubscribers = new Set<WebSocket>();
-export const tradebookSubscribers = new Set<WebSocket>();
-export const openOrderSubscribers = new Map<User["id"], Set<WebSocket>>();
-export const positionSubscribers = new Map<User["id"], Set<WebSocket>>();
+export const orderbookSubscribers = new Map<Asset["id"], Set<WebSocket>>();
+export const tradebookSubscribers = new Map<Asset["id"], Set<WebSocket>>();
+export const openOrderSubscribers = new Map<
+	{ userId: User["id"]; assetId: Asset["id"] },
+	Set<WebSocket>
+>();
+export const positionSubscribers = new Map<
+	{ userId: User["id"]; assetId: Asset["id"] },
+	Set<WebSocket>
+>();
 // why they are not in store and are here?, though they are stateful, but their state is only up until an order arives and fullfills, after that
 // they are empty. also, they are not saved in case of crash. so basically they are not stored at all.
 // order history will be calculated from openOrderResponses by the client.
 
-export let openOrderResponses = new Map<User["id"], Array<OpenOrdersDiffResponse>>();
-export let positionResponses = new Map<User["id"], Array<PositionsDiffResponse>>();
-export let orderbookResponses = new Array<OrderbookDiffResponse>();
-export let tradeResponses = new Array<TradeResponse>();
+export let OrderResponses = new Map<
+	{ userId: User["id"]; assetId: Asset["id"] },
+	Array<OrderDiffResponse>
+>();
+export let positionResponses = new Map<
+	{ userId: User["id"]; assetId: Asset["id"] },
+	Array<PositionDiffResponse>
+>();
+export let orderbookResponses = new Map<Asset["id"], Array<OrderbookDiffResponse>>();
+export let tradeResponses = new Map<Asset["id"], Array<TradeResponse>>();
 
-// Response setters
-export const setOpenOrderResponses = (data: Map<string, OpenOrdersDiffResponse[]>) =>
-	(openOrderResponses = data);
-export const setPositionResponses = (data: Map<string, PositionsDiffResponse[]>) =>
-	(positionResponses = data);
-export const setOrderbookResponses = (data: OrderbookDiffResponse[]) => (orderbookResponses = data);
-export const setTradeResponses = (data: TradeResponse[]) => (tradeResponses = data);
+export let clients = new Map<WebSocket, Set<SubscribeMessage & {userId?: User["id"]}>>();
+
+export const clearOrderResponses = () =>
+	(OrderResponses = new Map<
+		{ userId: User["id"]; assetId: Asset["id"] },
+		Array<OrderDiffResponse>
+	>());
+
+export const clearPositionResponses = () =>
+	(positionResponses = new Map<
+		{ userId: User["id"]; assetId: Asset["id"] },
+		Array<PositionDiffResponse>
+	>());
+
+export const clearOrderbookResponses = () =>
+	(orderbookResponses = new Map<Asset["id"], Array<OrderbookDiffResponse>>());
+
+export const clearTradeResponses = () =>
+	(tradeResponses = new Map<Asset["id"], Array<TradeResponse>>());
+
+export const clearAllResponses = () => {
+	clearOrderResponses();
+	clearPositionResponses();
+	clearOrderbookResponses();
+	clearTradeResponses();
+};

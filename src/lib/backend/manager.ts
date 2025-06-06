@@ -1,192 +1,109 @@
-import { Asset, Order, Order_Status, Order_Type, Position, Prisma, PrismaPromise, Side, User } from "@/generated/prisma";
-import prisma from "./database";
+import { Order, Order_Status, Order_Type, Prisma, PrismaPromise, Side, User } from "@/generated/prisma";
+import prisma, { appendUserBalanceInDB } from "./database";
 import { matchingEngine } from "./matchingEngine";
+import { respondToSubscribers, updatePositionResponsesContractPrice } from "./webSockets/utils";
+import { detailedUsersState } from "./store";
+import { getContractPrice } from "./utils";
+import Queue from "yocto-queue";
+import { UserWithPositionsAndOpenOrders } from "./types";
+import {v4 as uuid} from "uuid";
+import { placeOrder } from "../common/types";
 
-interface SubscribeMessage{
-    type: "subscribe",
-    channel: "orderbook" | "tradebook" | "openOrders" | "positions",
-    assetId: Asset["id"]
-}
+function liquidateUser(user: UserWithPositionsAndOpenOrders, orderQueue: Queue<Order>) {
 
-interface OrderMessage{
-    type: "order",
-    action: "place" | "cancel",
-    payload: CancelOrder | placeOrder
-}
+	user.usdc -= user.InitialMargin;
+	// reducing balance with margin
+	databaseActions.push(() => appendUserBalanceInDB(user.id, -user.InitialMargin));
+	user.InitialMargin = 0;
+	user.maintenanceMargin = 0;
+	user.funding_unpaid = 0;
+	user.pnl = 0;
 
-interface CancelOrder{
-    orderId: Order["id"];
-}
+	for(const [assetId, position] of user.positions){
+		
 
-interface placeOrder{
-    type: Order_Type,
-    side: Side,
-    assetId: Asset["id"],
-    price?: number,
-    quantity: number,
-    leverage: number,
-}
+		// making order for closing the position.
+		const order: Order = {
+			id: uuid(),
+			type: Order_Type.MARKET,
+			status: Order_Status.OPEN,
+			side: position.side===Side.ASK ? Side.BID : Side.ASK,
+			price: null,
+			quantity: position.quantity,
+			filled_quantity: 0,
+			average_filled_price: 0,
+			assetId: assetId, 
+			userId: position.userId,
+			leverage: position.leverage,
+			createdAt: new Date(Date.now()),
+			updatedAt: new Date(Date.now()),
+		}
 
-interface OrderbookDiffResponse {
-    assetId: Asset["id"],
-    side: Side,
-    price: number,
-    quantity: number
-}
-
-interface OpenOrdersDiffResponse {
-    userId: User["id"],
-    assetId: Asset["id"],
-    orderId: Order["id"],
-    status: Order_Status,
-    filled_quantitiy: number,
-    average_filled_quantitiy: number,
-}
-
-interface PositionsDiffResponse{
-    userId: User["id"],
-    assetId: Asset["id"],
-    positionId: Position["id"],
-    side: Side,
-    average_price: number,
-    quantity: number,
-}
-
-interface tradeResponses{
-    assetId: Asset["id"],
-    price: number,
-    quantity: number,
-}
-
-type WsMessage = SubscribeMessage | placeOrder;
-
-
-// const openOrderSubsribers = new 
-const orderbookSubscribers = new Set<WebSocket>();
-const tradebookSubscribers = new Set<WebSocket>();
-const openOrderSubscribers = new Map<User["id"], Set<WebSocket>>();
-const positionSubscribers = new Map<User["id"], Set<WebSocket>>();
-
-async function subscribe(message: SubscribeMessage, userId: User["id"] | null, client: WebSocket){
-
-    switch (message.channel) {
-        case "orderbook":
-            orderbookSubscribers.add(client);
-            break;
-    
-        case "tradebook":
-            tradebookSubscribers.add(client);
-            break;
-
-        case "openOrders":
-
-            const openOrderClients = openOrderSubscribers.get(userId!)  || (new Set<WebSocket>());
-            openOrderSubscribers.set(userId!, openOrderClients)
-            break;
-        
-        case "positions":
-
-            const positionClients = positionSubscribers.get(userId!)  || (new Set<WebSocket>());
-            positionSubscribers.set(userId!, positionClients)
-            break;
-
-        default:
-            break;
-    }
-}
-
-// unsubscribe is only valid for when connection is closed.
-async function unSubscribe(userId: User["id"] | null, client: WebSocket){
-
-    orderbookSubscribers.delete(client);
-    tradebookSubscribers.delete(client);
-
-    const openOrderClients = openOrderSubscribers.get(userId!)!
-    openOrderClients.delete(client);
-    if(openOrderClients.size===0){
-        openOrderSubscribers.delete(userId!)
-    }
-
-    const positionClients = positionSubscribers.get(userId!)!
-    positionClients.delete(client);
-    if(positionClients.size===0){
-        positionSubscribers.delete(userId!);
-    }
-}
-
-// order responses and trade responses are being sent as an array. please remember this.
-async function respondToSubscribers(){
-
-    if(orderbookResponses.length){
-        for(const client of orderbookSubscribers){
-            client.send(JSON.stringify(orderbookResponses))
-        }
-    }
-
-    if(tradeResponses.length){
-        for(const client of tradebookSubscribers){
-            client.send(JSON.stringify(tradeResponses))
-        }
-    }
-
-    for(const [userId, responses] of positionResponses){
-        if(!responses.length) continue;
-        const subscribers = positionSubscribers.get(userId)
-        
-        if(subscribers){
-            for(const client of subscribers){
-                client.send(JSON.stringify(responses));
-            }
-        }
-    }
-
-    for(const [userId, responses] of openOrderResponses){
-        if(!responses.length) continue;
-        const subscribers = openOrderSubscribers.get(userId)
-        
-        if(subscribers){
-            for(const client of subscribers){
-                client.send(JSON.stringify(responses));
-            }
-        }
-    }
-
-    // empty all the responses.
-    openOrderResponses = new Map<User["id"], Array<OpenOrdersDiffResponse>>();
-    positionResponses = new Map<User["id"], Array<PositionsDiffResponse>>();
-    orderbookResponses = new Array<OrderbookDiffResponse>()
-    tradeResponses = new Array<tradeResponses>()
+		orderQueue.enqueue(order)
+	}
 
 }
 
-// why they are not in store and are here?, though they are stateful, but their state is only up until an order arives and fullfills, after that
-// they are empty. also, they are not saved in case of crash. so basically they are not stored at all.
+// this array will include all the functions that will run and
+export let databaseActions: Array<() => PrismaPromise<any>>;
 
-// order history will be calculated from openOrderResponses by the client.
-let openOrderResponses = new Map<User["id"], Array<OpenOrdersDiffResponse>>();
-let positionResponses = new Map<User["id"], Array<PositionsDiffResponse>>();
-let orderbookResponses = new Array<OrderbookDiffResponse>()
-let tradeResponses = new Array<tradeResponses>()
+export async function orderManager(clientOrder: placeOrder, userId: User["id"]) {
+	// assign database actions an empty array
+	databaseActions = [];
 
-// this array will include all the functions that will run and 
-let databaseActions: Array<() => PrismaPromise<any>>;
+	const order = {...clientOrder, createdAt: new Date(Date.now()), updatedAt: new Date(Date.now()), status: Order_Status.OPEN, filled_quantity: 0, average_filled_price: 0, id: uuid(), userId, price: clientOrder.price ?? null}
+	// place order
+	// matchingEngine(order);
 
-async function orderManager(order: Order, userId: User["id"]){
+	const orderQueue = new Queue<Order>();
+	orderQueue.enqueue(order);
+	let isLiquidation = false;
 
-    // assign database actions an empty array
-    databaseActions = [];
+	while (orderQueue.size) {
+		// process the order..
+		const order = orderQueue.dequeue()!;
 
-    // place order
-    matchingEngine(order);
+		// initial liquidation is false.
+		matchingEngine(order, isLiquidation);
 
-    // add to database. this step solidifies the order and changes the overall state of exchange.
-    await prisma.$transaction(databaseActions.map(fn => fn()));
+		
+		isLiquidation = true;
 
-    // this step is to propogate to the clients who have subscribed.
-    respondToSubscribers();
+		const contractPrice = getContractPrice(order.assetId);
 
-    // this step is to respond to the user who made the order.
-    // this step is not necessary..
+		for (const [userId, user] of detailedUsersState) {
+			const position = user.positions.get(order.assetId);
+			if(!position) continue;
+
+			// adjust pnl
+			user.pnl -= position.pnl; // first remove the previous pnl of the asset of user
+
+			let singleQuantityProfit = contractPrice - position.average_price;
+			if (position.side === Side.ASK) singleQuantityProfit = -singleQuantityProfit;
+			const positionPNL = singleQuantityProfit * position.quantity;
+
+			position.pnl = positionPNL;
+			user.pnl += positionPNL;
 
 
+			// now check if user is liquidated or not, clearly user's pnl only be affected he has the position.
+			const nonCashEquity = user.InitialMargin + user.pnl - user.funding_unpaid;
+			if(nonCashEquity>=user.maintenanceMargin) continue; // no liquidation
+			// will liquidate here
+
+			liquidateUser(user, orderQueue);
+
+		}
+	}
+	// add to database. this step solidifies the order and changes the overall state of exchange.
+	await prisma.$transaction(databaseActions.map((fn) => fn()));
+
+	// this steps adds the current contract price to the position..!
+	updatePositionResponsesContractPrice();
+
+	// this step is to propogate to the clients who have subscribed.
+	respondToSubscribers();
+
+	// this step is to respond to the user who made the order.
+	// this step is not necessary..
 }

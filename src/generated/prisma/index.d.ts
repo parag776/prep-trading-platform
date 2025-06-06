@@ -85,8 +85,7 @@ export const Resolution: {
   SIX_HOUR: 'SIX_HOUR',
   EIGHT_HOUR: 'EIGHT_HOUR',
   TWELVE_HOUR: 'TWELVE_HOUR',
-  ONE_DAY: 'ONE_DAY',
-  ONE_WEEK: 'ONE_WEEK'
+  ONE_DAY: 'ONE_DAY'
 };
 
 export type Resolution = (typeof Resolution)[keyof typeof Resolution]
@@ -351,8 +350,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.7.0
-   * Query Engine version: 3cff47a7f5d65c3ea74883f1d736e41d68ce91ed
+   * Prisma Client JS version: 6.8.2
+   * Query Engine version: 2060c79ba17c6bb9f5823312b6f6b7f4a845738e
    */
   export type PrismaVersion = {
     client: string
@@ -2673,6 +2672,7 @@ export namespace Prisma {
     id: string | null
     email: string | null
     name: string | null
+    img_url: string | null
     password: string | null
     total_deposit: number | null
     usdc: number | null
@@ -2683,6 +2683,7 @@ export namespace Prisma {
     id: string | null
     email: string | null
     name: string | null
+    img_url: string | null
     password: string | null
     total_deposit: number | null
     usdc: number | null
@@ -2693,6 +2694,7 @@ export namespace Prisma {
     id: number
     email: number
     name: number
+    img_url: number
     password: number
     total_deposit: number
     usdc: number
@@ -2717,6 +2719,7 @@ export namespace Prisma {
     id?: true
     email?: true
     name?: true
+    img_url?: true
     password?: true
     total_deposit?: true
     usdc?: true
@@ -2727,6 +2730,7 @@ export namespace Prisma {
     id?: true
     email?: true
     name?: true
+    img_url?: true
     password?: true
     total_deposit?: true
     usdc?: true
@@ -2737,6 +2741,7 @@ export namespace Prisma {
     id?: true
     email?: true
     name?: true
+    img_url?: true
     password?: true
     total_deposit?: true
     usdc?: true
@@ -2834,6 +2839,7 @@ export namespace Prisma {
     id: string
     email: string
     name: string
+    img_url: string | null
     password: string | null
     total_deposit: number
     usdc: number
@@ -2863,6 +2869,7 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     name?: boolean
+    img_url?: boolean
     password?: boolean
     total_deposit?: boolean
     usdc?: boolean
@@ -2878,6 +2885,7 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     name?: boolean
+    img_url?: boolean
     password?: boolean
     total_deposit?: boolean
     usdc?: boolean
@@ -2888,6 +2896,7 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     name?: boolean
+    img_url?: boolean
     password?: boolean
     total_deposit?: boolean
     usdc?: boolean
@@ -2898,13 +2907,14 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     name?: boolean
+    img_url?: boolean
     password?: boolean
     total_deposit?: boolean
     usdc?: boolean
     funding_unpaid?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "password" | "total_deposit" | "usdc" | "funding_unpaid", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "img_url" | "password" | "total_deposit" | "usdc" | "funding_unpaid", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bought?: boolean | User$boughtArgs<ExtArgs>
     sold?: boolean | User$soldArgs<ExtArgs>
@@ -2927,6 +2937,7 @@ export namespace Prisma {
       id: string
       email: string
       name: string
+      img_url: string | null
       password: string | null
       total_deposit: number
       usdc: number
@@ -3361,6 +3372,7 @@ export namespace Prisma {
     readonly id: FieldRef<"User", 'String'>
     readonly email: FieldRef<"User", 'String'>
     readonly name: FieldRef<"User", 'String'>
+    readonly img_url: FieldRef<"User", 'String'>
     readonly password: FieldRef<"User", 'String'>
     readonly total_deposit: FieldRef<"User", 'Float'>
     readonly usdc: FieldRef<"User", 'Float'>
@@ -5046,6 +5058,7 @@ export namespace Prisma {
     userId: string | null
     leverage: number | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type OrderMaxAggregateOutputType = {
@@ -5061,6 +5074,7 @@ export namespace Prisma {
     userId: string | null
     leverage: number | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type OrderCountAggregateOutputType = {
@@ -5076,6 +5090,7 @@ export namespace Prisma {
     userId: number
     leverage: number
     createdAt: number
+    updatedAt: number
     _all: number
   }
 
@@ -5109,6 +5124,7 @@ export namespace Prisma {
     userId?: true
     leverage?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type OrderMaxAggregateInputType = {
@@ -5124,6 +5140,7 @@ export namespace Prisma {
     userId?: true
     leverage?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type OrderCountAggregateInputType = {
@@ -5139,6 +5156,7 @@ export namespace Prisma {
     userId?: true
     leverage?: true
     createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -5241,6 +5259,7 @@ export namespace Prisma {
     userId: string
     leverage: number
     createdAt: Date
+    updatedAt: Date
     _count: OrderCountAggregateOutputType | null
     _avg: OrderAvgAggregateOutputType | null
     _sum: OrderSumAggregateOutputType | null
@@ -5275,6 +5294,7 @@ export namespace Prisma {
     userId?: boolean
     leverage?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
     asset?: boolean | AssetDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
@@ -5292,6 +5312,7 @@ export namespace Prisma {
     userId?: boolean
     leverage?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
     asset?: boolean | AssetDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
@@ -5309,6 +5330,7 @@ export namespace Prisma {
     userId?: boolean
     leverage?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
     asset?: boolean | AssetDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
@@ -5326,9 +5348,10 @@ export namespace Prisma {
     userId?: boolean
     leverage?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "status" | "side" | "price" | "quantity" | "filled_quantity" | "average_filled_price" | "assetId" | "userId" | "leverage" | "createdAt", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "status" | "side" | "price" | "quantity" | "filled_quantity" | "average_filled_price" | "assetId" | "userId" | "leverage" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     asset?: boolean | AssetDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -5361,6 +5384,7 @@ export namespace Prisma {
       userId: string
       leverage: number
       createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["order"]>
     composites: {}
   }
@@ -5798,6 +5822,7 @@ export namespace Prisma {
     readonly userId: FieldRef<"Order", 'String'>
     readonly leverage: FieldRef<"Order", 'Int'>
     readonly createdAt: FieldRef<"Order", 'DateTime'>
+    readonly updatedAt: FieldRef<"Order", 'DateTime'>
   }
     
 
@@ -6245,6 +6270,7 @@ export namespace Prisma {
     quantity: number | null
     leverage: number | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type PositionMaxAggregateOutputType = {
@@ -6256,6 +6282,7 @@ export namespace Prisma {
     quantity: number | null
     leverage: number | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type PositionCountAggregateOutputType = {
@@ -6267,6 +6294,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt: number
+    updatedAt: number
     _all: number
   }
 
@@ -6292,6 +6320,7 @@ export namespace Prisma {
     quantity?: true
     leverage?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type PositionMaxAggregateInputType = {
@@ -6303,6 +6332,7 @@ export namespace Prisma {
     quantity?: true
     leverage?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type PositionCountAggregateInputType = {
@@ -6314,6 +6344,7 @@ export namespace Prisma {
     quantity?: true
     leverage?: true
     createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -6412,6 +6443,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt: Date
+    updatedAt: Date
     _count: PositionCountAggregateOutputType | null
     _avg: PositionAvgAggregateOutputType | null
     _sum: PositionSumAggregateOutputType | null
@@ -6442,6 +6474,7 @@ export namespace Prisma {
     quantity?: boolean
     leverage?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
     asset?: boolean | AssetDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["position"]>
@@ -6455,6 +6488,7 @@ export namespace Prisma {
     quantity?: boolean
     leverage?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
     asset?: boolean | AssetDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["position"]>
@@ -6468,6 +6502,7 @@ export namespace Prisma {
     quantity?: boolean
     leverage?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
     asset?: boolean | AssetDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["position"]>
@@ -6481,9 +6516,10 @@ export namespace Prisma {
     quantity?: boolean
     leverage?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }
 
-  export type PositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "assetId" | "side" | "average_price" | "quantity" | "leverage" | "createdAt", ExtArgs["result"]["position"]>
+  export type PositionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "assetId" | "side" | "average_price" | "quantity" | "leverage" | "createdAt" | "updatedAt", ExtArgs["result"]["position"]>
   export type PositionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     asset?: boolean | AssetDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -6512,6 +6548,7 @@ export namespace Prisma {
       quantity: number
       leverage: number
       createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["position"]>
     composites: {}
   }
@@ -6945,6 +6982,7 @@ export namespace Prisma {
     readonly quantity: FieldRef<"Position", 'Float'>
     readonly leverage: FieldRef<"Position", 'Int'>
     readonly createdAt: FieldRef<"Position", 'DateTime'>
+    readonly updatedAt: FieldRef<"Position", 'DateTime'>
   }
     
 
@@ -8534,6 +8572,7 @@ export namespace Prisma {
     id: 'id',
     email: 'email',
     name: 'name',
+    img_url: 'img_url',
     password: 'password',
     total_deposit: 'total_deposit',
     usdc: 'usdc',
@@ -8568,7 +8607,8 @@ export namespace Prisma {
     assetId: 'assetId',
     userId: 'userId',
     leverage: 'leverage',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
@@ -8582,7 +8622,8 @@ export namespace Prisma {
     average_price: 'average_price',
     quantity: 'quantity',
     leverage: 'leverage',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type PositionScalarFieldEnum = (typeof PositionScalarFieldEnum)[keyof typeof PositionScalarFieldEnum]
@@ -8812,6 +8853,7 @@ export namespace Prisma {
     id?: StringFilter<"User"> | string
     email?: StringFilter<"User"> | string
     name?: StringFilter<"User"> | string
+    img_url?: StringNullableFilter<"User"> | string | null
     password?: StringNullableFilter<"User"> | string | null
     total_deposit?: FloatFilter<"User"> | number
     usdc?: FloatFilter<"User"> | number
@@ -8826,6 +8868,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    img_url?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
     total_deposit?: SortOrder
     usdc?: SortOrder
@@ -8843,6 +8886,7 @@ export namespace Prisma {
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
     name?: StringFilter<"User"> | string
+    img_url?: StringNullableFilter<"User"> | string | null
     password?: StringNullableFilter<"User"> | string | null
     total_deposit?: FloatFilter<"User"> | number
     usdc?: FloatFilter<"User"> | number
@@ -8857,6 +8901,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    img_url?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
     total_deposit?: SortOrder
     usdc?: SortOrder
@@ -8875,6 +8920,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"User"> | string
     email?: StringWithAggregatesFilter<"User"> | string
     name?: StringWithAggregatesFilter<"User"> | string
+    img_url?: StringNullableWithAggregatesFilter<"User"> | string | null
     password?: StringNullableWithAggregatesFilter<"User"> | string | null
     total_deposit?: FloatWithAggregatesFilter<"User"> | number
     usdc?: FloatWithAggregatesFilter<"User"> | number
@@ -8970,6 +9016,7 @@ export namespace Prisma {
     userId?: StringFilter<"Order"> | string
     leverage?: IntFilter<"Order"> | number
     createdAt?: DateTimeFilter<"Order"> | Date | string
+    updatedAt?: DateTimeFilter<"Order"> | Date | string
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
@@ -8987,6 +9034,7 @@ export namespace Prisma {
     userId?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     asset?: AssetOrderByWithRelationInput
     user?: UserOrderByWithRelationInput
   }
@@ -9007,6 +9055,7 @@ export namespace Prisma {
     userId?: StringFilter<"Order"> | string
     leverage?: IntFilter<"Order"> | number
     createdAt?: DateTimeFilter<"Order"> | Date | string
+    updatedAt?: DateTimeFilter<"Order"> | Date | string
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id">
@@ -9024,6 +9073,7 @@ export namespace Prisma {
     userId?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: OrderCountOrderByAggregateInput
     _avg?: OrderAvgOrderByAggregateInput
     _max?: OrderMaxOrderByAggregateInput
@@ -9047,6 +9097,7 @@ export namespace Prisma {
     userId?: StringWithAggregatesFilter<"Order"> | string
     leverage?: IntWithAggregatesFilter<"Order"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Order"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Order"> | Date | string
   }
 
   export type PositionWhereInput = {
@@ -9061,6 +9112,7 @@ export namespace Prisma {
     quantity?: FloatFilter<"Position"> | number
     leverage?: IntFilter<"Position"> | number
     createdAt?: DateTimeFilter<"Position"> | Date | string
+    updatedAt?: DateTimeFilter<"Position"> | Date | string
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
@@ -9074,6 +9126,7 @@ export namespace Prisma {
     quantity?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     asset?: AssetOrderByWithRelationInput
     user?: UserOrderByWithRelationInput
   }
@@ -9090,6 +9143,7 @@ export namespace Prisma {
     quantity?: FloatFilter<"Position"> | number
     leverage?: IntFilter<"Position"> | number
     createdAt?: DateTimeFilter<"Position"> | Date | string
+    updatedAt?: DateTimeFilter<"Position"> | Date | string
     asset?: XOR<AssetScalarRelationFilter, AssetWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id">
@@ -9103,6 +9157,7 @@ export namespace Prisma {
     quantity?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: PositionCountOrderByAggregateInput
     _avg?: PositionAvgOrderByAggregateInput
     _max?: PositionMaxOrderByAggregateInput
@@ -9122,6 +9177,7 @@ export namespace Prisma {
     quantity?: FloatWithAggregatesFilter<"Position"> | number
     leverage?: IntWithAggregatesFilter<"Position"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Position"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Position"> | Date | string
   }
 
   export type Historical_DataWhereInput = {
@@ -9266,6 +9322,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -9280,6 +9337,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -9294,6 +9352,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -9308,6 +9367,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -9322,6 +9382,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -9332,6 +9393,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -9342,6 +9404,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -9426,6 +9489,7 @@ export namespace Prisma {
     average_filled_price?: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
     asset: AssetCreateNestedOneWithoutOrdersInput
     user: UserCreateNestedOneWithoutOrdersInput
   }
@@ -9443,6 +9507,7 @@ export namespace Prisma {
     userId: string
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type OrderUpdateInput = {
@@ -9456,6 +9521,7 @@ export namespace Prisma {
     average_filled_price?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutOrdersNestedInput
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
   }
@@ -9473,6 +9539,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type OrderCreateManyInput = {
@@ -9488,6 +9555,7 @@ export namespace Prisma {
     userId: string
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type OrderUpdateManyMutationInput = {
@@ -9501,6 +9569,7 @@ export namespace Prisma {
     average_filled_price?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type OrderUncheckedUpdateManyInput = {
@@ -9516,6 +9585,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PositionCreateInput = {
@@ -9525,6 +9595,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
     asset: AssetCreateNestedOneWithoutPositionsInput
     user: UserCreateNestedOneWithoutPositionsInput
   }
@@ -9538,6 +9609,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type PositionUpdateInput = {
@@ -9547,6 +9619,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutPositionsNestedInput
     user?: UserUpdateOneRequiredWithoutPositionsNestedInput
   }
@@ -9560,6 +9633,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PositionCreateManyInput = {
@@ -9571,6 +9645,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type PositionUpdateManyMutationInput = {
@@ -9580,6 +9655,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PositionUncheckedUpdateManyInput = {
@@ -9591,6 +9667,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type Historical_DataCreateInput = {
@@ -9816,6 +9893,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    img_url?: SortOrder
     password?: SortOrder
     total_deposit?: SortOrder
     usdc?: SortOrder
@@ -9832,6 +9910,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    img_url?: SortOrder
     password?: SortOrder
     total_deposit?: SortOrder
     usdc?: SortOrder
@@ -9842,6 +9921,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    img_url?: SortOrder
     password?: SortOrder
     total_deposit?: SortOrder
     usdc?: SortOrder
@@ -10001,6 +10081,7 @@ export namespace Prisma {
     userId?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type OrderAvgOrderByAggregateInput = {
@@ -10024,6 +10105,7 @@ export namespace Prisma {
     userId?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type OrderMinOrderByAggregateInput = {
@@ -10039,6 +10121,7 @@ export namespace Prisma {
     userId?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type OrderSumOrderByAggregateInput = {
@@ -10120,6 +10203,7 @@ export namespace Prisma {
     quantity?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type PositionAvgOrderByAggregateInput = {
@@ -10137,6 +10221,7 @@ export namespace Prisma {
     quantity?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type PositionMinOrderByAggregateInput = {
@@ -10148,6 +10233,7 @@ export namespace Prisma {
     quantity?: SortOrder
     leverage?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type PositionSumOrderByAggregateInput = {
@@ -11014,6 +11100,7 @@ export namespace Prisma {
     average_filled_price?: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
   }
 
@@ -11029,6 +11116,7 @@ export namespace Prisma {
     userId: string
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type OrderCreateOrConnectWithoutAssetInput = {
@@ -11048,6 +11136,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
     user: UserCreateNestedOneWithoutPositionsInput
   }
 
@@ -11059,6 +11148,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type PositionCreateOrConnectWithoutAssetInput = {
@@ -11162,6 +11252,7 @@ export namespace Prisma {
     userId?: StringFilter<"Order"> | string
     leverage?: IntFilter<"Order"> | number
     createdAt?: DateTimeFilter<"Order"> | Date | string
+    updatedAt?: DateTimeFilter<"Order"> | Date | string
   }
 
   export type PositionUpsertWithWhereUniqueWithoutAssetInput = {
@@ -11192,6 +11283,7 @@ export namespace Prisma {
     quantity?: FloatFilter<"Position"> | number
     leverage?: IntFilter<"Position"> | number
     createdAt?: DateTimeFilter<"Position"> | Date | string
+    updatedAt?: DateTimeFilter<"Position"> | Date | string
   }
 
   export type Historical_DataUpsertWithWhereUniqueWithoutAssetInput = {
@@ -11291,6 +11383,7 @@ export namespace Prisma {
     average_filled_price?: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
     asset: AssetCreateNestedOneWithoutOrdersInput
   }
 
@@ -11306,6 +11399,7 @@ export namespace Prisma {
     assetId: string
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type OrderCreateOrConnectWithoutUserInput = {
@@ -11325,6 +11419,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
     asset: AssetCreateNestedOneWithoutPositionsInput
   }
 
@@ -11336,6 +11431,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type PositionCreateOrConnectWithoutUserInput = {
@@ -11441,6 +11537,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -11454,6 +11551,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -11472,6 +11570,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -11485,6 +11584,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -11545,6 +11645,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -11558,6 +11659,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -11582,6 +11684,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -11595,6 +11698,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -11633,6 +11737,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -11646,6 +11751,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -11706,6 +11812,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -11719,6 +11826,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -11757,6 +11865,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -11770,6 +11879,7 @@ export namespace Prisma {
     id?: string
     email: string
     name: string
+    img_url?: string | null
     password?: string | null
     total_deposit?: number
     usdc?: number
@@ -11830,6 +11940,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -11843,6 +11954,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    img_url?: NullableStringFieldUpdateOperationsInput | string | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
     total_deposit?: FloatFieldUpdateOperationsInput | number
     usdc?: FloatFieldUpdateOperationsInput | number
@@ -11929,6 +12041,7 @@ export namespace Prisma {
     userId: string
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type PositionCreateManyAssetInput = {
@@ -11939,6 +12052,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type Historical_DataCreateManyAssetInput = {
@@ -11989,6 +12103,7 @@ export namespace Prisma {
     average_filled_price?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
   }
 
@@ -12004,6 +12119,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type OrderUncheckedUpdateManyWithoutAssetInput = {
@@ -12018,6 +12134,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PositionUpdateWithoutAssetInput = {
@@ -12027,6 +12144,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutPositionsNestedInput
   }
 
@@ -12038,6 +12156,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PositionUncheckedUpdateManyWithoutAssetInput = {
@@ -12048,6 +12167,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type Historical_DataUpdateWithoutAssetInput = {
@@ -12110,6 +12230,7 @@ export namespace Prisma {
     assetId: string
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type PositionCreateManyUserInput = {
@@ -12120,6 +12241,7 @@ export namespace Prisma {
     quantity: number
     leverage: number
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type TradeUpdateWithoutBuyerInput = {
@@ -12187,6 +12309,7 @@ export namespace Prisma {
     average_filled_price?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutOrdersNestedInput
   }
 
@@ -12202,6 +12325,7 @@ export namespace Prisma {
     assetId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type OrderUncheckedUpdateManyWithoutUserInput = {
@@ -12216,6 +12340,7 @@ export namespace Prisma {
     assetId?: StringFieldUpdateOperationsInput | string
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PositionUpdateWithoutUserInput = {
@@ -12225,6 +12350,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asset?: AssetUpdateOneRequiredWithoutPositionsNestedInput
   }
 
@@ -12236,6 +12362,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PositionUncheckedUpdateManyWithoutUserInput = {
@@ -12246,6 +12373,7 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
     leverage?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

@@ -20,7 +20,7 @@ export function sessionWrapper(cb: (req: Request, userId: User["id"])=>Promise<R
                     }
                 })
             }
-            return await cb(req, session.userId);
+            return await cb(req, session.user.userId);
         } catch(e){
             if(e instanceof ZodError){
                 return new Response(JSON.stringify({

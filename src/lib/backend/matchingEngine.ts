@@ -1,292 +1,613 @@
-import { Order, Order_Status, Order_Type, Prisma, Side, Trade } from "@/generated/prisma";
-import { calculateMarginRequirement } from "./marginRequirement";
+import {
+	Asset,
+	Order,
+	Order_Status,
+	Order_Type,
+	Position,
+	Prisma,
+	Side,
+	Trade,
+	User,
+} from "@/generated/prisma";
+import { calculateMarginAndCheckLiquidity } from "./marginRequirement";
 import { detailedUsersState, latestCandles, orderbooks } from "./store";
 import { AppError, ErrorType } from "../common/error";
-import config from "../../../config.json"
-import { adjustCandle, calculateFee, calculateMaintenanceMargin, calculateMarginWithFee, calculateMarginWithoutFee } from "./utils";
-import { OrderBook, OrderWithRequiredPrice } from "./types";
+import config from "../../../config.json";
+import {
+	adjustCandle,
+	calculateFee,
+	calculateMaintenanceMargin,
+	calculateMarginWithFee,
+	calculateMarginWithoutFee,
+} from "./utils";
+import { OrderBook, OrderWithRequiredPrice, UserWithPositionsAndOpenOrders } from "./types";
 import createRBTree from "functional-red-black-tree";
-import prisma from "./database";
-import {v4 as uuid } from "uuid";
+import prisma, {
+	addOrderToDB,
+	addPositionToDB,
+	appendUserBalanceInDB,
+	deletePositionFromDB,
+	updateLatestCandleToDB,
+	updateOrderInDB,
+	updatePositionInDB,
+} from "./database";
+import { v4 as uuid } from "uuid";
 import { resolutionInfo } from "../common/data";
+import { databaseActions } from "./manager";
+import { positionResponses } from "./webSockets/state";
+import {
+	addOrderDiffResponse,
+	addOrderbookDiffResponse,
+	addPositionResponse,
+	addTradeResponse,
+} from "./webSockets/utils";
 
+// createOrder(order, orderbook, orderPrice, remainingQuantity, average_filled_price)
 
-function createOrder(databaseQueryArray: Array<()=>Prisma.PrismaPromise<any>>, order: Order, orderbook: OrderBook, price: number, quantity: number, average_filled_price: number){
-    let orders: createRBTree.Tree<OrderWithRequiredPrice, null>;
-    if(order.side===Side.ASK){
-        orders = orderbook.askOrderbook.orders;
-    } else {
-        orders = orderbook.bidOrderbook.orders;
-    }
+function createOrder(
+	order: Order,
+	average_filled_price: number,
+	filled_quantity: number,
+	orderbook: OrderBook
+) {
+	const remaining_quantity = order.quantity - order.filled_quantity;
+	if (order.price && remaining_quantity) {
+		// updated userMargin
+		const margin = calculateMarginWithFee(
+			order.price,
+			remaining_quantity,
+			order.leverage,
+			config.maker_fee
+		);
+		const user = detailedUsersState.get(order.userId)!;
 
-    const updatedOrder: OrderWithRequiredPrice = {...order, type: Order_Type.LIMIT, price, quantity, average_filled_price};
-    orders.insert(updatedOrder, null);
-    
-    // db query
-    databaseQueryArray.push(()=>prisma.order.create({
-        data: updatedOrder
-    }));
+		user.orderMargin += margin;
+
+		//order
+		order.filled_quantity = filled_quantity;
+		order.average_filled_price = average_filled_price;
+
+		// updated user orders
+		user.orders.set(order.id, order as OrderWithRequiredPrice);
+
+		// added order to orderbook
+		if (order.side === Side.ASK) {
+			orderbook.askOrderbook.orders = orderbook.askOrderbook.orders.insert(
+				order as OrderWithRequiredPrice,
+				null
+			);
+		} else {
+			orderbook.bidOrderbook.orders = orderbook.bidOrderbook.orders.insert(
+				order as OrderWithRequiredPrice,
+				null
+			);
+		}
+
+		addOrderbookDiffResponse(order.assetId, order.side, order.price, remaining_quantity);
+	} else {
+		order.filled_quantity = filled_quantity;
+		order.average_filled_price = average_filled_price;
+		order.status = Order_Status.FILLED;
+	}
+	databaseActions.push(() => addOrderToDB(order));
+	addOrderDiffResponse(order);
 }
 
-function processTrade(databaseQueryArray: Array<()=>Prisma.PrismaPromise<any>>, price: number, quantity: number, assetId: string, buyerInfo, sellerInfo, isLastTrade: boolean){
+// please remember this order object has come from the user and not from the main order object.
+function decreaseOrder(userId: User["id"], orderId: Order["id"], fill: number) {
+	const user = detailedUsersState.get(userId)!;
+	const order = user.orders.get(orderId)!;
+	const margin = calculateMarginWithFee(order.price, fill, order.leverage, config.maker_fee);
+	// reducing order margin
+	user.orderMargin -= margin;
 
-    const trade: Trade = {
-        id: uuid(),
-        buyerId: buyerInfo.id,
-        sellerId: sellerInfo.id,
-        price,
-        quantity,
-        assetId,
-        createdAt: new Date(Date.now())
-    }
+	// removing order from orderbook and user.
+	if (order.side === Side.ASK) {
+		orderbooks.get(order.assetId)?.askOrderbook.orders!.remove(order);
+	} else {
+		orderbooks.get(order.assetId)?.bidOrderbook.orders!.remove(order);
+	}
+	user.orders.delete(order.id);
 
-    // if its last trade of the order, process the candle and update historical data.
-    if(isLastTrade){
-        for(let resolution of resolutionInfo.keys()){
-            const candle = latestCandles.get({assetId, resolution})!
-            adjustCandle(assetId, resolution, trade)
-            databaseQueryArray.push(()=>prisma.historical_Data.upsert({
-                where: {
-                    assetId_resolution_timestamp: {
-                        assetId,
-                        resolution,
-                        timestamp: candle.timestamp,
-                    }
-                },
-                update: {
-                    open: candle.open,
-                    high: candle.high,
-                    low: candle.low,
-                    close: candle.close,
-                    volume: candle.volume,
-                },
-                create: {
-                    assetId,
-                    resolution,
-                    timestamp: candle.timestamp,
-                    open: candle.open,
-                    high: candle.high,
-                    low: candle.low,
-                    close: candle.close,
-                    volume: candle.volume,
-                }
-            }))
-        }
-    }
+	const total_filled_quantity = order.filled_quantity + fill;
+	const average_filled_price =
+		(order.filled_quantity * order.average_filled_price + fill * order.price) /
+		total_filled_quantity;
 
+	order.filled_quantity = total_filled_quantity;
+	order.average_filled_price = average_filled_price;
 
-    databaseQueryArray.push(()=>prisma.trade.create({
-        data: trade
-    }));
+	if (total_filled_quantity !== order.quantity) {
+		// adding back order in orderbook and user.
+		if (order.side === Side.ASK) {
+			orderbooks.get(order.assetId)?.askOrderbook.orders!.insert(order, null);
+		} else {
+			orderbooks.get(order.assetId)?.bidOrderbook.orders!.insert(order, null);
+		}
+		user.orders.set(order.id, order);
+	} else {
+		// other wise order is filled.
+		order.status = Order_Status.FILLED;
+	}
 
-    const buyer = detailedUsersState.get(buyerInfo.id)!;
-    const seller = detailedUsersState.get(sellerInfo.id)!;
-
-
-
-
+	// giving responses and update in db.
+	// (-) because we are reducing quantity.
+	addOrderbookDiffResponse(order.assetId, order.side, order.price, -fill);
+	addOrderDiffResponse(order);
+	databaseActions.push(() => updateOrderInDB(order));
 }
 
-function fillOrder(databaseQueryArray: Array<()=>Prisma.PrismaPromise<any>>, order: OrderWithRequiredPrice, fill: number){
-    const user = detailedUsersState.get(order.userId)!;
+function cancelOrder(userId: User["id"], orderId: Order["id"]) {
+	const user = detailedUsersState.get(userId)!;
+	const order = user.orders.get(orderId)!;
+	const remaining_quantity = order.quantity - order.filled_quantity;
+	const margin = calculateMarginWithFee(
+		order.price,
+		remaining_quantity,
+		order.leverage,
+		config.maker_fee
+	);
+	// reducing order margin
+	user.orderMargin -= margin;
 
-    // calculating margins here.
-    // const margin = calculateMarginWithoutFee(order.price, fill, order.leverage);
-    // const fee = calculateFee(order.price, fill, order.leverage, config.maker_fee);
+	// removing order from orderbook and user.
+	if (order.side === Side.ASK) {
+		orderbooks.get(order.assetId)?.askOrderbook.orders!.remove(order);
+	} else {
+		orderbooks.get(order.assetId)?.bidOrderbook.orders!.remove(order);
+	}
+	user.orders.delete(order.id);
 
-    // user.orderMargin-=margin;
-    // // user.nonCashEquity+=margin; // wait there could be a case where positions are reducing instead of increasing, we will have to look into it.
-    // user.maintenanceMargin+=calculateMaintenanceMargin(order.price, filled_quantity);
+	// other wise order is filled.
+	order.status = Order_Status.CANCELLED;
 
-    let userOrders = user.orders;
-    let userPositions = user.positions;
-
-
-
-
-        const remainingQuantity = order.quantity - order.filled_quantity;
-        if(fill===remainingQuantity){ // remaining quantity
-            // remove
-
-            userOrders = userOrders.filter((uOrder)=>{
-                return uOrder.id !== order.id;
-            });
-
-            // update user margins
-
-            // update to db
-            const average_filled_price = (order.filled_quantity*order.average_filled_price + remainingQuantity*order.price)/order.quantity;
-
-
-            databaseQueryArray.push(()=>prisma.order.update({
-                where: {
-                    id: order.id,
-                },
-                data: {
-                    filled_quantity: order.quantity,
-                    average_filled_price,
-                    status: Order_Status.FILLED
-                }
-            }))
-
-            // send update for order through ws network. note: here only send the updated stuff. don't send all open orders.
-
-        } else {
-
-            //update
-
-            const curFilledQuantity = order.filled_quantity+fill;
-            const average_filled_price = (order.filled_quantity*order.average_filled_price + fill*order.price)/curFilledQuantity;
-
-            for(let uOrder of userOrders){
-
-                if(uOrder.id!==order.id) continue;
-
-                uOrder.filled_quantity = curFilledQuantity;
-                uOrder.average_filled_price = average_filled_price;
-
-            }
-
-            // update user margins
-
-            // update to db
-            databaseQueryArray.push(()=>prisma.order.update({
-                where: {
-                    id: order.id,
-                },
-                data: {
-                    filled_quantity: curFilledQuantity,
-                    average_filled_price,
-                    status: Order_Status.FILLED
-                }
-            }))
-            // send update for order through ws network. note: here only send the updated stuff. don't send all open orders.
-
-        // update positions (make current position pnl to be 0, it will be adjusted later when calculating other's pnl)
-        
-        // first create endpoints, now, without endpoints its going to be difficult, then update order book, then come code this!!!!!!!!!!!!!
-
-
-        // update user margins and pnl
-
-        // update to db
-
-        // send update for position through ws network. note: here only send the updated stuff. don't send all open positions.
-
-    }
-
-
-
+	// giving responses and update in db.
+	// (-) because we are reducing quantity.
+	addOrderbookDiffResponse(order.assetId, order.side, order.price, -remaining_quantity);
+	addOrderDiffResponse(order);
+	databaseActions.push(() => updateOrderInDB(order));
 }
 
-export function matchingEngine(order: Order){
+function makeTrade(
+	price: number,
+	quantity: number,
+	assetId: string,
+	buyerId: User["id"],
+	sellerId: User["id"],
+	isLastTrade: Boolean
+) {
+	const trade: Trade = {
+		id: uuid(),
+		buyerId: buyerId,
+		sellerId: sellerId,
+		price,
+		quantity,
+		assetId,
+		createdAt: new Date(Date.now()),
+	};
 
-    const user = detailedUsersState.get(order.userId)!;
-    const marginRequired = calculateMarginRequirement(order);
-    if(marginRequired>user.usdc){
-        throw new AppError(ErrorType.InsufficientMarginError, `${user.name} with user id ${user.id} doesn't have enough margin for the trade.`, 422);
-    }
+	// if its last trade of the order, process the candle and update historical data.
+	if (isLastTrade) {
+		for (let resolution of resolutionInfo.keys()) {
+			const candle = latestCandles.get({ assetId, resolution })!;
+			adjustCandle(assetId, resolution, trade);
+			databaseActions.push(() => updateLatestCandleToDB(assetId, resolution, candle));
+		}
+	}
 
-    let orderbook = orderbooks.get(order.assetId)!;
+	databaseActions.push(() =>
+		prisma.trade.create({
+			data: trade,
+		})
+	);
 
-    // create an array which contains queries to be sent to database.
-    const databaseQueryArray: Array<()=>Prisma.PrismaPromise<any>> = []
+	addTradeResponse(trade);
+}
 
-    // reduce from usdc.
-    let orderMargin = 0;
-    let totalfee = 0;
-    if(order.side===Side.ASK){
-            let remainingQuantity = order.quantity
-            let currentPositionSize = 0;
-            let filledQuantity = 0;
-            // if its a market order, price is 0.
-            const orderPrice = order.price || 0
-            
-            for (let bidOrder of orderbook.bidOrderbook.orders.keys) {
-    
-                // checking condition -> asking price is greater than maximum bidding price. (maker)
-                if(orderPrice>bidOrder.price){
-                    orderMargin+=calculateMarginWithFee(orderPrice, remainingQuantity, order.leverage, config.maker_fee);
+function closeLiquidatedPosition(userId: User["id"], assetId: Asset["id"]) {
+	const user = detailedUsersState.get(userId)!;
+	const position = user.positions.get(assetId)!;
 
-                    let average_filled_price = 0;
-                    if(filledQuantity>0){
-                        average_filled_price = currentPositionSize/filledQuantity;
-                    }
+	position.quantity = 0;
+	position.average_price = 0;
+	position.updatedAt = new Date(Date.now());
 
-                    createOrder(databaseQueryArray, order, orderbook, orderPrice, remainingQuantity, average_filled_price);
+	// now since the position is 0 remove the position from position Array;
+	databaseActions.push(() => deletePositionFromDB(position));
+	addPositionResponse(position);
 
-                    remainingQuantity = 0;
-                    break;
-                }
-                
-                // checking condition -> remaining quantity is less than current bidOrder quantity (taker)
-                if(remainingQuantity<=bidOrder.quantity){
-                    totalfee+=calculateFee(bidOrder.price, remainingQuantity, order.leverage, config.taker_fee);
+	// deleting the state.
+	user.positions.delete(assetId);
+}
 
-                    
+function makePosition(
+	userId: User["id"],
+	assetId: Asset["id"],
+	side: Side,
+	quantity: number,
+	price: number,
+	leverage: number,
+	is_maker: boolean
+) {
+	const user = detailedUsersState.get(userId)!;
+	const position = user.positions.get(assetId);
 
-                    const buyerInfo = {
-                        id: bidOrder.id,
+	// taking fee
+	const fee = calculateFee(
+		price,
+		quantity,
+		leverage,
+		is_maker ? config.maker_fee : config.taker_fee
+	);
+	user.usdc -= fee;
+	databaseActions.push(() => appendUserBalanceInDB(user.id, -fee));
 
-                    }
+	// case where position did not exist already.
+	if (!position) {
+		user.maintenanceMargin+=calculateMaintenanceMargin(price, quantity);
+		user.InitialMargin += calculateMarginWithoutFee(quantity, price, leverage);
 
-                    
+		const newPosition: Position = {
+			id: uuid(),
+			side,
+			assetId,
+			userId: user.id,
+			average_price: price,
+			quantity,
+			leverage,
+			createdAt: new Date(Date.now()),
+			updatedAt: new Date(Date.now()),
+		};
+		user.positions.set(assetId, { ...newPosition, pnl: 0 });
+		databaseActions.push(() => addPositionToDB(newPosition));
+		addPositionResponse(newPosition);
+		return;
+	}
 
-                    remainingQuantity = 0;
-                    break;
-                }
-    
-                // otherwise, consume this order and move ahead. 
-                margin+=calculateMarginWithFee(bidOrder.price, bidOrder.quantity, order.leverage, takerFee);
-                remainingQuantity-=bidOrder.quantity;
-            }
-    
-            // if still quantity remaining. (maker)
-            if(remainingQuantity){
-    
-                if(order.type===Order_Type.MARKET){
-                    throw new AppError(ErrorType.InsufficientLiquidityError, "There is not enough liquidity in market.", 422)
-                }
-    
-                margin+=calculateMarginWithFee(orderPrice, remainingQuantity, order.leverage, makerFee);
-            }
-        } else {
-    
-            let remainingQuantity = order.quantity;
-            const orderPrice = order.price || Math.max();
-            for (let askOrder of orderbook.askOrderbook.orders.keys){
-    
-                // checking condition -> bidding price is less than minimum asking price. (maker)
-                if(orderPrice<askOrder.price){
-                    margin+=calculateMarginWithFee(orderPrice, remainingQuantity, order.leverage, makerFee);
-                    remainingQuantity = 0;
-                    break;
-                }
-    
-                // checking condition -> remaining quantity is less than current askOrder quantity (taker)
-                if(remainingQuantity<=askOrder.quantity){
-                    margin+=calculateMarginWithFee(askOrder.price, remainingQuantity, order.leverage, takerFee);
-                    remainingQuantity = 0;
-                    break;
-                }
-    
-                // otherwise, consume this order and move ahead. 
-                margin+=calculateMarginWithFee(askOrder.price, askOrder.quantity, order.leverage, takerFee);
-                remainingQuantity-=askOrder.quantity;
-            }
-            
-    
-            // if still quantity remaining. (maker)
-            if(remainingQuantity){
-    
-                if(order.type===Order_Type.MARKET){
-                    throw new AppError(ErrorType.InsufficientLiquidityError, "There is not enough liquidity in market.", 422) // todo, create new Error Class extending this one.
-                }
-    
-                margin+=calculateMarginWithFee(orderPrice, remainingQuantity, order.leverage, makerFee);
-            }
-    
-        }
-    
+	// cases where position exisisted --->
 
+	// first things first making all pnl = 0 <-----> because i will forget it and it will be the biggest reason for a bug.
+	user.pnl -= position.pnl;
+	position.pnl = 0;
+
+	// case where we are just adding to the position.
+	if (position.side === side) {
+		user.InitialMargin += calculateMarginWithoutFee(quantity, price, leverage);
+		user.maintenanceMargin+=calculateMaintenanceMargin(price, quantity);
+
+		const new_quantity = position.quantity + quantity;
+		const new_average_price =
+			(position.average_price * position.quantity + price * quantity) / new_quantity;
+
+		position.quantity = new_quantity;
+		position.average_price = new_average_price;
+		position.updatedAt = new Date(Date.now());
+
+		databaseActions.push(() => updatePositionInDB(position));
+		addPositionResponse(position);
+		return;
+	}
+
+	// remaining cases are only those where position is being made to the opposite direction.
+	if (position.quantity > quantity) {
+		// reducing earlier margin that was already added.
+		user.InitialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
+		user.maintenanceMargin -= calculateMaintenanceMargin(quantity, position.average_price);
+
+		// adding profit
+		const profit = quantity * (price - position.average_price);
+		user.usdc += profit;
+		databaseActions.push(() => appendUserBalanceInDB(user.id, profit));
+
+		// price will be same
+		position.quantity -= quantity;
+		position.updatedAt = new Date(Date.now());
+
+		databaseActions.push(() => updatePositionInDB(position));
+		addPositionResponse(position);
+	} else if (position.quantity === quantity) {
+		// reducing earlier margin that was already added.
+		user.InitialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
+		user.maintenanceMargin -= calculateMaintenanceMargin(quantity, position.average_price);
+
+		// adding profit
+		const profit = quantity * (price - position.average_price);
+		user.usdc += profit;
+		databaseActions.push(() => appendUserBalanceInDB(user.id, profit));
+
+		position.quantity = 0;
+		position.average_price = 0;
+		position.updatedAt = new Date(Date.now());
+
+		// now since the position is 0 remove the position from position Array;
+		databaseActions.push(() => deletePositionFromDB(position));
+		addPositionResponse(position);
+
+		// deleting the state.
+		user.positions.delete(assetId);
+	} else {
+		const oppositeQuantity = quantity - position.quantity;
+
+		// first removing initial margin
+		user.InitialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
+		user.maintenanceMargin -= calculateMaintenanceMargin(quantity, position.average_price);
+
+		// then adding the margin created by opposite position.
+		user.InitialMargin += calculateMarginWithoutFee(quantity, price, leverage);
+		user.maintenanceMargin += calculateMaintenanceMargin(quantity, price);
+
+		// adding profit for the position that is closed,
+		const profit = quantity * (price - position.average_price);
+		user.usdc += profit;
+		databaseActions.push(() => appendUserBalanceInDB(user.id, profit));
+
+		position.quantity = oppositeQuantity;
+		position.average_price = price;
+		position.updatedAt = new Date(Date.now());
+		position.side = side; // in this case the side also changed.
+
+		databaseActions.push(() => updatePositionInDB(position));
+		addPositionResponse(position);
+	}
+}
+
+export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
+	const user = detailedUsersState.get(order.userId)!;
+
+	// this is checking if enough liquidity is present to process the order..else throw an error.
+	const marginRequired = calculateMarginAndCheckLiquidity(order);
+
+	if (isLiquidation) {
+		const accountEquity =
+			user.usdc - user.InitialMargin - user.orderMargin - user.funding_unpaid + user.pnl;
+		if (marginRequired > accountEquity) {
+			throw new AppError(
+				ErrorType.InsufficientMarginError,
+				`${user.name} with user id ${user.id} doesn't have enough margin for the trade.`,
+				422
+			);
+		}
+	}
+
+	let orderbook = orderbooks.get(order.assetId)!;
+
+	if (order.side === Side.ASK) {
+		let remainingQuantity = order.quantity;
+		let currentPositionSize = 0;
+		let filledQuantity = 0;
+		// if its a market order, price is 0.
+		const orderPrice = order.price || 0;
+
+		for (let bidOrder of orderbook.bidOrderbook.orders.keys) {
+			// checking condition -> asking price is greater than maximum bidding price. (maker)
+			if (orderPrice > bidOrder.price) {
+				let average_filled_price = 0;
+				if (filledQuantity > 0) {
+					average_filled_price = currentPositionSize / filledQuantity;
+				}
+
+				// create order and update orderbook (take care of margin, remember margin is here with fee)
+				createOrder(
+					{ ...order, price: orderPrice },
+					average_filled_price,
+					filledQuantity,
+					orderbook
+				);
+				if (isLiquidation) {
+					closeLiquidatedPosition(user.id, order.assetId);
+				} else {
+					makePosition(
+						user.id,
+						order.assetId,
+						order.side,
+						filledQuantity,
+						average_filled_price,
+						order.leverage,
+						false
+					);
+				}
+
+				remainingQuantity = 0;
+				break;
+			}
+
+			// checking condition -> remaining quantity is less than current bidOrder quantity (taker)
+			if (remainingQuantity <= bidOrder.quantity) {
+				// fillOrder(bidOrder, quantityToFill);
+				filledQuantity += remainingQuantity;
+				currentPositionSize += remainingQuantity * bidOrder.price;
+
+				let average_filled_price = 0;
+				if (filledQuantity > 0) {
+					average_filled_price = currentPositionSize / filledQuantity;
+				}
+
+				// making position for the user whose order has been filled.
+				// decreasing order that was already in place.
+				decreaseOrder(bidOrder.userId, bidOrder.id, remainingQuantity);
+
+				// making position for the one whose order was matched.
+				makePosition(
+					bidOrder.userId,
+					bidOrder.assetId,
+					bidOrder.side,
+					remainingQuantity,
+					bidOrder.price,
+					bidOrder.leverage,
+					true
+				);
+
+				// making position for current user who placed the order.
+				if (isLiquidation) {
+					closeLiquidatedPosition(user.id, order.assetId);
+				} else {
+					makePosition(
+						user.id,
+						order.assetId,
+						order.side,
+						filledQuantity,
+						average_filled_price,
+						order.leverage,
+						false
+					);
+				}
+				makeTrade(
+					bidOrder.price,
+					remainingQuantity,
+					order.assetId,
+					bidOrder.userId,
+					order.userId,
+					true
+				);
+
+				remainingQuantity = 0;
+				break;
+			}
+
+			// otherwise, consume this order and move ahead.
+
+			decreaseOrder(bidOrder.userId, bidOrder.id, bidOrder.quantity);
+
+			// making position for whose order was matched.
+			makePosition(
+				bidOrder.userId,
+				bidOrder.assetId,
+				bidOrder.side,
+				bidOrder.quantity,
+				bidOrder.price,
+				bidOrder.leverage,
+				true
+			);
+			makeTrade(
+				bidOrder.price,
+				bidOrder.quantity,
+				order.assetId,
+				bidOrder.userId,
+				order.userId,
+				false
+			);
+
+			remainingQuantity -= bidOrder.quantity;
+		}
+	} else {
+		let remainingQuantity = order.quantity;
+		let currentPositionSize = 0;
+		let filledQuantity = 0;
+		// if its a market order, price is 0.
+		const orderPrice = order.price || Math.max();
+
+		for (let askOrder of orderbook.askOrderbook.orders.keys) {
+			// checking condition -> asking price is greater than maximum bidding price. (maker)
+			if (orderPrice < askOrder.price) {
+				let average_filled_price = 0;
+				if (filledQuantity > 0) {
+					average_filled_price = currentPositionSize / filledQuantity;
+				}
+
+				// create order and update orderbook (take care of margin, remember margin is here with fee)
+				createOrder(
+					{ ...order, price: orderPrice },
+					average_filled_price,
+					filledQuantity,
+					orderbook
+				);
+				if (isLiquidation) {
+					closeLiquidatedPosition(user.id, order.assetId);
+				} else {
+					makePosition(
+						user.id,
+						order.assetId,
+						order.side,
+						filledQuantity,
+						average_filled_price,
+						order.leverage,
+						false
+					);
+				}
+
+				remainingQuantity = 0;
+				break;
+			}
+
+			// checking condition -> remaining quantity is less than current bidOrder quantity (taker)
+			if (remainingQuantity <= askOrder.quantity) {
+				// fillOrder(bidOrder, quantityToFill);
+				filledQuantity += remainingQuantity;
+				currentPositionSize += remainingQuantity * askOrder.price;
+
+				let average_filled_price = 0;
+				if (filledQuantity > 0) {
+					average_filled_price = currentPositionSize / filledQuantity;
+				}
+
+				// making position for the user whose order has been filled.
+				// decreasing order that was already in place.
+				decreaseOrder(askOrder.userId, askOrder.id, remainingQuantity);
+
+				// making position for the one whose order was matched.
+				makePosition(
+					askOrder.userId,
+					askOrder.assetId,
+					askOrder.side,
+					remainingQuantity,
+					askOrder.price,
+					askOrder.leverage,
+					true
+				);
+
+				// making position for current user who placed the order.
+				if (isLiquidation) {
+					closeLiquidatedPosition(user.id, order.assetId);
+				} else {
+					makePosition(
+						user.id,
+						order.assetId,
+						order.side,
+						filledQuantity,
+						average_filled_price,
+						order.leverage,
+						false
+					);
+				}
+				makeTrade(
+					askOrder.price,
+					remainingQuantity,
+					order.assetId,
+					order.userId,
+					askOrder.userId,
+					true
+				);
+
+				remainingQuantity = 0;
+				break;
+			}
+
+			// otherwise, consume this order and move ahead.
+
+			decreaseOrder(askOrder.userId, askOrder.id, askOrder.quantity);
+
+			// making position for whose order was matched.
+			makePosition(
+				askOrder.userId,
+				askOrder.assetId,
+				askOrder.side,
+				askOrder.quantity,
+				askOrder.price,
+				askOrder.leverage,
+				true
+			);
+			makeTrade(
+				askOrder.price,
+				askOrder.quantity,
+				order.assetId,
+				order.userId,
+				askOrder.userId,
+				false
+			);
+
+			remainingQuantity -= askOrder.quantity;
+		}
+	}
+
+	//
 }

@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { assets, symbolToAssetId } from "../store";
 export const depositValidation = z.object({
-	amount: z.coerce.number().min(0),
+	amount: z.coerce.number(),
 });
 
-export const orderbookValidation = z
+export const symbolValidation = z
 	.object({
 		symbol: z.string().refine((symbol) => assets.some((asset) => asset.symbol === symbol), {
 			message: "symbol is not valid.",

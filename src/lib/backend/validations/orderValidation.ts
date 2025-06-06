@@ -1,6 +1,6 @@
 import { Order_Type, Side, User } from "@/generated/prisma";
 import { z } from "zod";
-import { assets, detailedUsersState, spotPrices, symbolToAssetId } from "../store";
+import { assets, detailedUsersState, spotPrices } from "../store";
 import config from "../../../../config.json";
 
 export function getPlaceOrderValidation(userId: User["id"]) {
@@ -14,27 +14,26 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 			side: z
 				.string()
 				.refine((val) => Object.keys(Side).includes(val), { message: "invalid side" }),
-			symbol: z.string().refine((symbol) => assets.some((asset) => asset.symbol === symbol), {
-				message: "symbol is not valid.",
+			assetId: z.string().refine((assetId) => assets.some((asset) => asset.id === assetId), {
+				message: "asset does not exist.",
 			}),
 			price: z.coerce.number().optional(),
 			quantity: z.coerce.number(),
 			leverage: z.coerce.number().int().min(config.leverage_min).max(config.leverage_max),
 		})
 		.transform((data) => {
-			const assetId = symbolToAssetId.get(data.symbol)!;
-			const { symbol, ...rest } = data;
-			return { ...rest, assetId };
+			const typeEnum = data.type as Order_Type
+			const sideEnum = data.type as Side
+			const {  type, side, ...rest } = data;
+			return { ...rest, type: typeEnum, side: sideEnum };
 		})
 		.superRefine((obj, ctx) => {
-			const actualLeverage = userPositions.find(
-				(position) => position.assetId === obj.assetId
-			)?.leverage;
+			const actualLeverage = userPositions.get(obj.assetId)?.leverage;
 			if (actualLeverage !== obj.leverage) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
 					message:
-						"Leverage mismatch: All positions for the same symbol must use the same leverage setting.",
+						"Leverage mismatch: All positions for the same asset must use the same leverage setting.",
 					path: ["leverage"],
 				});
 			}
@@ -47,7 +46,6 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 						path: ["price"],
 					});
 				}
-
 				return;
 			}
 			const spotPrice = spotPrices.get(obj.assetId)!;
@@ -73,7 +71,7 @@ export function getCancelOrderValidation(userId: User["id"]) {
 	const user = detailedUsersState.get(userId)!;
 
 	return z.object({
-		id: z.string().refine((id) => user.orders.some((order) => order.assetId === id), {
+		id: z.string().refine((id) => user.orders.has(id), {
 			message: "invalid order id.",
 		}),
 	});

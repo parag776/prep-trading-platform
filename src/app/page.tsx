@@ -1,23 +1,20 @@
-"use client"
-import Input from "@/components/Input";
-import Switch from "@/components/Switch";
-import SwitchOrder from "@/components/SwitchOrder";
-import { Side } from "@/lib/frontend/orderbook";
-import { use, useState } from "react";
-import LeverageSlider from "@/components/LeverageSlider";
-import { RecoilRoot } from "recoil";
-import { signIn, signOut } from "next-auth/react";
+"use client";
+import MarketDataPanel from "@/components/MarketDataPanel/MarketDataPanel";
+// import { Side } from "@/lib/frontend/orderbook";
+import Navbar from "@/components/Navbar/Navbar";
 
-const tempChoice = ["a", "b", "c"]
+const tempChoice = ["a", "b", "c"];
 
 export default function Home() {
-  
-  const [leverage, setLeverage] = useState(1);
+	return (
+		<div className="bg-background-1 h-screen font-mono text-slate-200 w-screen">
+			<Navbar img={"/icons/btc.png"} />
+      <div className="flex justify-center items-center">
 
-  return (
-      <RecoilRoot>
-        <button onClick={() => signIn()}>singin</button>
-        <button onClick={() => signOut()}>signout</button>
-      </RecoilRoot>
-  );
+        <div className="w-150 h-150">
+          <MarketDataPanel />
+        </div>
+      </div>
+		</div>
+	);
 }

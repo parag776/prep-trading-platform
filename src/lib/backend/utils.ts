@@ -1,4 +1,4 @@
-import { Asset, Resolution, Side, Trade } from "@/generated/prisma";
+import { Asset, Historical_Data, Resolution, Side, Trade } from "@/generated/prisma";
 import { latestCandles, orderbooks } from "./store";
 import { resolutionInfo } from "../common/data";
 import config from "../../../config.json";
@@ -72,6 +72,7 @@ export function getTime(date: Date) {
   return Math.floor(date.getTime() / 1000);
 }
 
+// pure function -->
 function getOrdersLiteArray(
   orders: createRBTree.Tree<OrderWithRequiredPrice, null>
 ) {
@@ -79,14 +80,17 @@ function getOrdersLiteArray(
 
   const ordersLite = new Array<CumulativeOrderLite>();
 
-  if (ordersArray.length === 0) return ordersLite;
+  let latestOrderTime: number = 0;
+  if (ordersArray.length === 0) return {ordersLite, latestOrderTime};
 
   const side = ordersArray[0].side;
   let price = ordersArray[0].price;
   let quantity = ordersArray[0].quantity;
   let cumulativeQuantity = ordersArray[0].quantity;
+  latestOrderTime = ordersArray[0].createdAt.getTime();
 
   for (let i = 1; i < ordersArray.length; i++) {
+    latestOrderTime = Math.max(latestOrderTime, ordersArray[i].createdAt.getTime())
     if (price === ordersArray[i].price) {
       quantity += ordersArray[i].price;
     } else {
@@ -98,7 +102,7 @@ function getOrdersLiteArray(
   }
   ordersLite.push({ price, quantity, cumulativeQuantity, side });
 
-  return ordersLite;
+  return {ordersLite, latestOrderTime};
 }
 
 export function getOrderbookLite(assetId: Asset["id"]) {
@@ -107,17 +111,56 @@ export function getOrderbookLite(assetId: Asset["id"]) {
   const askOrders = orderbook.askOrderbook.orders;
   const bidOrders = orderbook.bidOrderbook.orders;
 
+  const askOrdersLite = getOrdersLiteArray(askOrders);
+  const bidOrdersLite = getOrdersLiteArray(bidOrders);
+
   const orderbookLite: OrderBookLite = {
-    latestOrder: new Date(orderbook.lastOrderTimestamp.getTime()),
+    lastOrderTimestamp: new Date(Math.max(askOrdersLite.latestOrderTime, bidOrdersLite.latestOrderTime)),
     askOrderbook: {
       side: Side.ASK,
-      orders: getOrdersLiteArray(askOrders),
+      orders: askOrdersLite.ordersLite
     },
     bidOrderbook: {
       side: Side.BID,
-      orders: getOrdersLiteArray(bidOrders),
+      orders: bidOrdersLite.ordersLite
     },
   };
 
   return orderbookLite;
+}
+
+export function getAllResolutionData(data: Array<Historical_Data>){
+
+  const allResolutionData = new Array<Historical_Data>();
+  const millisecondsInAMinute = 60*1000;
+
+  for(const resolution of resolutionInfo){
+    let curCandle: Historical_Data = structuredClone(data[0])
+    curCandle.resolution = resolution[0];
+    let endTime = curCandle.timestamp.getTime();
+
+    for(let i=1;i<data.length;i++){
+      if((data[i].timestamp.getTime()+millisecondsInAMinute)%resolution[1].duration === 0){ // start of new candle time curtime%duration = -1
+        endTime = data[i].timestamp.getTime();
+        curCandle.timestamp = structuredClone(data[i-1].timestamp);
+        allResolutionData.push(curCandle);
+        curCandle = structuredClone(data[i]);
+        curCandle.resolution = resolution[0];
+      }
+      
+      curCandle.low = Math.min(data[i].low, curCandle.low);
+      curCandle.high = Math.max(data[i].high, curCandle.high);
+      curCandle.open = data[i].open;
+      curCandle.volume += data[i].volume;
+      // close is already taken into account.
+    }
+
+    const candleStart = Math.floor(data[data.length-1].timestamp.getTime()/resolution[1].duration)*resolution[1].duration;
+    curCandle.timestamp = new Date(candleStart);
+    allResolutionData.push(curCandle)
+    
+  }
+
+  return allResolutionData;
+
 }

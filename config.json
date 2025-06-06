@@ -1,5 +1,6 @@
 {
     "trade_book_size": 50,
+    "order_history_size": 50,
     "leverage_min": 1,
     "leverage_max": 100,
     "taker_fee": 0.0004,

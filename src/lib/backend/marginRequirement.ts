@@ -9,7 +9,7 @@ import { AppError, ErrorType } from "../common/error";
 const makerFee = config.maker_fee
 const takerFee = config.taker_fee
 
-export function calculateMarginRequirement(order: Order){
+export function calculateMarginAndCheckLiquidity(order: Order){
     const orderbook = orderbooks.get(order.assetId)!;
 
     let margin = 0;

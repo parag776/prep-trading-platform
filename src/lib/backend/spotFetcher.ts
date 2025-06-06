@@ -1,7 +1,9 @@
 import WebSocket from "ws";
 import { assets, spotPrices, symbolToAssetId } from "./store";
+import { Asset } from "@/generated/prisma";
+import axios from "axios";
 
-export function fetchSpotPrices() {
+export function streamSpotPrices() {
   const baseUrl = "wss://stream.binance.com:9443/";
   const streams = assets
     .map((asset) => asset.symbol.toLowerCase() + "usdc@miniTicker")
@@ -44,4 +46,13 @@ export function fetchSpotPrices() {
     });
   }
   connect();
+}
+
+export async function fetchHttpSpotPrice(asset: Asset): Promise<number> {
+  const symbol = `${asset.symbol}USDC`; // e.g., BTCUSDC
+  const url = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`;
+
+  const response = await axios.get(url);
+  return Number(response.data.price);
+  
 }

@@ -1,36 +1,29 @@
 import { z } from "zod";
-import { assets, symbolToAssetId } from "../store";
+import { assets} from "../store";
 import { Asset, User } from "@/generated/prisma";
 import { getPlaceOrderValidation, getCancelOrderValidation } from "./orderValidation";
 
 export function getSubscribeMessageValidation(userId: Asset["id"] | null) {
 	return z
 		.object({
-			type: z.literal("subscribe"),
-			channel: z.enum([
-				"orderbook",
-				"tradebook",
-				"openOrders",
-				"positions",
-			]),
-			symbol: z
-				.string()
-				.refine((symbol) => assets.some((asset) => asset.symbol === symbol), {
-					message: "symbol is not valid.",
-				})
-				.optional(),
-		})
-		.transform((obj) => {
-			const assetId = obj.symbol === undefined ? undefined : symbolToAssetId.get(obj.symbol);
-			const { symbol, ...rest } = obj;
-			return { ...rest, assetId };
+			type: z.enum(["subscribe", "unsubscribe"]),
+			channel: z.enum(["orderbook", "tradebook", "openOrders", "positions"]),
+			assetId: z.string().refine(
+				(assetId) => {
+					if(assetId==="all") return true;
+					return assets.some((asset) => asset.id === assetId);
+				},
+				{
+					message: "assetId is not valid.",
+				}
+			),
 		})
 		.superRefine((obj, ctx) => {
-			if (["orderbook", "tradebook"].includes(obj.channel) && !obj.assetId) {
+			if (["orderbook", "tradebook"].includes(obj.channel) && obj.assetId==="all") {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: "Symbol is not provided.",
-					path: ["symbol"],
+					message: "Can't subscribe to all assets",
+					path: ["assetId"],
 				});
 			}
 			if (["openOrders", "positions"].includes(obj.channel) && !userId) {
@@ -44,7 +37,6 @@ export function getSubscribeMessageValidation(userId: Asset["id"] | null) {
 }
 
 export function getOrderMessageValidation(userId: User["id"]) {
-
 	return z
 		.object({
 			type: z.literal("order"),

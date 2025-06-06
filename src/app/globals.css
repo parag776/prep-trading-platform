@@ -3,18 +3,49 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  --price-red: #DD4548;
+  --price-green: #05AD6D;
+
+  --cumulative-quantity-red: #44282D;
+  --cumulative-quantity-green: #1B3B33;
+
+  --quantity-red: #7F3338;
+  --quantity-green: #12654A;
+
+  --light-gray: "#e5e7eb"
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
   --color-background-1: #0e0f14;
   --color-background-2: #14151b;
   --color-background-3: #202127;
   --color-background-4: #2a2b32;
+
+  --color-background-green: #0C2922;
+  --color-background-blue: #172336;
+
+  --color-text-green: #02AC6D;
+  --color-text-blue: #4686E8;
+
+  --color-price-red: var(--price-red);
+  --color-price-green: var(--price-green);
+
+  --color-cumulative-quantity-red: var(--cumulative-quantity-red);
+  --color-cumulative-quantity-green: var(--cumulative-quantity-green);
+
+  --color-quantity-red: var(--quantity-red);
+  --color-quantity-green: var(--quantity-green);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  
 }
 
 @media (prefers-color-scheme: dark) {

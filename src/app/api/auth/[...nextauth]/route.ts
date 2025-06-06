@@ -31,7 +31,8 @@ export const authOptions = {
 					data: {
 						id: uuid(),
 						name: user.name || "anonymous",
-						email: user.email!,
+						email: user.email,
+						img_url: user.image,
 					},
 				});
 			}
@@ -41,12 +42,16 @@ export const authOptions = {
 			const user = await prisma.user.findFirst({
 				select: {
 					id: true,
+					img_url: true,
 				},
 				where: {
 					email: session.user.email,
 				},
 			});
-			session.userId = user?.id;
+			session.user.userId = user?.id;
+			if(user?.img_url){
+				session.user.image = user?.img_url
+			}
 			return session;
 		},
 	},

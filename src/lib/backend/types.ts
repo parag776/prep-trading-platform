@@ -1,50 +1,47 @@
-import {
-  Asset,
-  Order,
-  Position,
-  Resolution,
-  Side,
-  User,
-} from "@/generated/prisma";
+import { Asset, Order, Position, Resolution, Side, User } from "@/generated/prisma";
 import createRBTree from "functional-red-black-tree";
+import { OrderWithRequiredPrice, PositionWithPNL } from "../common/types";
 
-type _OrderWithRequiredPrice = Omit<Order, "price"> & { price: number };
-export type OrderWithRequiredPrice = {
-  [K in keyof _OrderWithRequiredPrice]: _OrderWithRequiredPrice[K];
-};
+
 
 export interface HalfOrderBook {
-  side: Side;
-  orders: createRBTree.Tree<OrderWithRequiredPrice, null>;
+	side: Side;
+	orders: createRBTree.Tree<OrderWithRequiredPrice, null>;
 }
 
 export interface OrderBook {
-  lastOrderTimestamp: Date;
-  asset: Asset["id"];
-  askOrderbook: HalfOrderBook;
-  bidOrderbook: HalfOrderBook;
+	asset: Asset["id"];
+	askOrderbook: HalfOrderBook;
+	bidOrderbook: HalfOrderBook;
 }
 
 export interface Candle {
-  timestamp: Date;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
+	timestamp: Date;
+	open: number;
+	high: number;
+	low: number;
+	close: number;
+	volume: number;
 }
 
 // here non cash equity = IM of positions, due funding, pnl of positions
 // here order margin = IM of open and partially fullfilled orders.
 // here maintainence margin is
 
-export type userWithoutPassword = Omit<User, "password">
-export type positionWithPNL = Position & {pnl: number};
+export type userWithoutPassword = Omit<User, "password">;
 
-export type extendedUser = userWithoutPassword & {nonCashEquity: number, maintenanceMargin: number, orderMargin: number};
+export type extendedUser = userWithoutPassword & {
+	maintenanceMargin: number;
+	InitialMargin: number;
+	pnl: number;
+	orderMargin: number;
+};
 
-export type UserWithPositionsAndOpenOrders = extendedUser & {positions: positionWithPNL[]} &
-  {orders: OrderWithRequiredPrice[]};
+export type UserWithPositionsAndOpenOrders = extendedUser & {
+	positions: Map<Asset["id"], PositionWithPNL>;
+} & { orders: Map<OrderWithRequiredPrice["id"], OrderWithRequiredPrice> };
 
-
-export type LatestCandleByAssetAndResolution = Map<{assetId: Asset["id"], resolution: Resolution}, Candle>;
+export type LatestCandleByAssetAndResolution = Map<
+	{ assetId: Asset["id"]; resolution: Resolution },
+	Candle
+>;
