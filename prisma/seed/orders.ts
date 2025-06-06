@@ -8,7 +8,7 @@ import seedrandom from 'seedrandom'
 import prisma from "./prismaClient";
 import {v4 as uuid} from "uuid";
 
-async function generateOrders(){
+async function generateOrders(orderCount: number){
 
     const rng = seedrandom("my_not_so_random_seed")
     const assetSpot = new Map<Asset["id"], number>();
@@ -23,8 +23,8 @@ async function generateOrders(){
         let userBlockedMargin = 0;
         for(let asset of assets){
 
-            // 50% of times no orders for the asset, and rest 50% of times 1-4 orders.
-            let count = rng()>0.5? Math.ceil(rng()*4):0;
+            // 50% of times no orders for the asset, and rest 50% of times 1-orderCount orders.
+            let count = rng()>0.5? Math.ceil(rng()*orderCount):0;
 
             const leverage = Math.ceil(rng()*config_data.leverage_max);
 
@@ -37,7 +37,7 @@ async function generateOrders(){
 
                 userBlockedMargin+=orderMargin;
 
-                const side = rng()>0.5 ? Side.BID : Side.ASK
+                const side: Side = rng()>0.5 ? Side.BID : Side.ASK
 
                 // from 0.5% to 3.5%
                 const deltaFromSpot = (0.5 + rng()*3)*spot/100;
@@ -53,6 +53,8 @@ async function generateOrders(){
                 // from 10 to 10010
                 const quantity = orderMargin*leverage/((1+config_data.maker_fee)*price)
 
+                const creationTime = Date.now()
+
                 const order = {
                     id: uuid(),
                     type: Order_Type.LIMIT,
@@ -65,7 +67,8 @@ async function generateOrders(){
                     assetId: asset.id,
                     userId: user.id,
                     leverage: rng()*100,
-                    createdAt: new Date(Date.now())
+                    createdAt: new Date(creationTime),
+                    updatedAt: new Date(creationTime)
                 }
                 orders.push(order);
             }
@@ -76,7 +79,7 @@ async function generateOrders(){
 }
 
 export async function fillOrders(seedingQueries: Array<()=>PrismaPromise<any>>){
-    const orders = await generateOrders();
+    const orders = await generateOrders(30);
     seedingQueries.push(()=>prisma.order.createMany({
         data: orders,
     }));

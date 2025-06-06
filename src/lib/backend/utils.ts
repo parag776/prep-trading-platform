@@ -2,9 +2,8 @@ import { Asset, Historical_Data, Resolution, Side, Trade } from "@/generated/pri
 import { latestCandles, orderbooks } from "./store";
 import { resolutionInfo } from "../common/data";
 import config from "../../../config.json";
-import { CumulativeOrderLite, OrderBookLite } from "../common/types";
+import { CumulativeOrderLite, OrderBookLite, OrderWithRequiredPrice } from "../common/types";
 import createRBTree from "functional-red-black-tree";
-import { OrderWithRequiredPrice } from "./types";
 
 export function calculateMarginWithoutFee(
   price: number,
