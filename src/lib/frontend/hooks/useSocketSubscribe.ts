@@ -25,22 +25,9 @@ export function useSocketSubscribe(
 	const { socket, addSubscriber, removeSubscriber } = SocketSubscribeContextValue;
 
 	useEffect(() => {
-
-        const subMessage: SubscribeMessage = {
-            type: "subscribe",
-            channel,
-            assetId,
-        };
-
-        const unSubMessage: SubscribeMessage = {...subMessage, type: "unsubscribe" };
-
         const subscriber = {channel, assetId, callback};
-
-		socket.send(JSON.stringify(subMessage));
 		addSubscriber(subscriber);
-
 		return () => {
-			socket.send(JSON.stringify(unSubMessage));
             removeSubscriber(subscriber);
 		};
 	}, []);
