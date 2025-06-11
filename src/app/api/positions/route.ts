@@ -1,8 +1,6 @@
-import { User } from "@/generated/prisma";
+import { Position, User } from "@/generated/prisma";
 import { requestWrapper } from "../requestWrapper";
 import { detailedUsersState } from "@/lib/backend/store";
-import { PositionWithContractPrice } from "@/lib/common/types";
-import { getContractPrice } from "@/lib/backend/utils";
 
 // update all positions to position with contract price.!
 
@@ -11,11 +9,9 @@ import { getContractPrice } from "@/lib/backend/utils";
 export const GET = requestWrapper((req: Request, userId: User["id"])=>{
     const positions = detailedUsersState.get(userId)?.positions
 
-    let positionArray: PositionWithContractPrice[] = [];
+    let positionArray: Position[] = [];
     if(positions){
-        positionArray = Array.from(positions.values()).map((position)=>{
-            return {...position, pnl: undefined, contractPrice: getContractPrice(position.assetId)}
-        })
+        positionArray = Array.from(positions.values())
     }
 
     return new Response(JSON.stringify(positionArray), {

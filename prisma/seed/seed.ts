@@ -1,10 +1,10 @@
-import { PrismaPromise } from "../../src/generated/prisma";
+import { PrismaPromise } from "../../src/generated/prisma/index";
 import fillAssets from "./asset";
 import fillHistoricalData from "./historical_data";
 import fillUsers from "./user";
 import prisma from "./prismaClient";
 import { fillOrders } from "./orders";
-
+import "tsconfig-paths/register";
 
 // adding all queries
 
@@ -13,7 +13,7 @@ async function main() {
 	fillAssets(seedingQueries);
 	await fillHistoricalData(seedingQueries);
 	fillUsers(seedingQueries);
-    await fillOrders(seedingQueries);
+	await fillOrders(seedingQueries);
 
 	prisma
 		.$transaction(seedingQueries.map((fn) => fn()))

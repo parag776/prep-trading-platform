@@ -1,7 +1,6 @@
 import { symbolValidation } from "@/lib/backend/validations/miscValidations";
 import { requestWrapper } from "../requestWrapper";
-import { latestCandles } from "@/lib/backend/store";
-import { Resolution } from "@/generated/prisma";
+import { getContractPrice } from "@/lib/backend/utils";
 
 const GET = requestWrapper(async (req: Request)=>{
     const {searchParams} = new URL(req.url);
@@ -11,7 +10,7 @@ const GET = requestWrapper(async (req: Request)=>{
 
     const {assetId} = symbolValidation.parse(params);
 
-    const contractPrice = latestCandles.get({assetId, resolution: Resolution.ONE_MINUTE})?.close
+    const contractPrice = getContractPrice(assetId);
 
     return new Response(JSON.stringify({contractPrice}), {
         status: 200,

@@ -1,5 +1,5 @@
-import { Asset, Order, Position, PrismaClient, Resolution, User } from "@/generated/prisma";
-import { Candle, OrderWithRequiredPrice } from "./types";
+import { Asset, Order, Position, PrismaClient, PrismaPromise, Resolution, User } from "@/generated/prisma";
+import { Candle } from "./types";
 
 const prisma = new PrismaClient();
 export default prisma;
@@ -15,6 +15,18 @@ export function appendUserBalanceInDB(userId: User["id"], amount: number) {
 			},
 		},
 	});
+}
+
+export function liquidateUserInDB(userId: User["id"]){
+    return prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            usdc: 0,
+            funding_unpaid: 0
+        }
+    })
 }
 
 export function addPositionToDB(position: Position) {
@@ -89,3 +101,6 @@ export function updateLatestCandleToDB(assetId: Asset["id"], resolution: Resolut
     })
     }
 
+export async function pushToDatabase(databaseActions: Array<() => PrismaPromise<any>>){
+    await prisma.$transaction(databaseActions.map((fn) => fn()));
+}

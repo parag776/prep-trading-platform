@@ -2,7 +2,6 @@ import { PrismaPromise } from "../../src/generated/prisma";
 import { v4 as uuid } from "uuid";
 import prisma from "./prismaClient";
 
-
 export const assets = [
 	{
 		id: uuid(),

@@ -1,28 +1,31 @@
 import { z } from "zod";
-import { assets} from "../store";
+import { assets } from "../store";
 import { Asset, User } from "@/generated/prisma";
 import { getPlaceOrderValidation, getCancelOrderValidation } from "./orderValidation";
 
-export function getSubscribeMessageValidation(userId: Asset["id"] | null) {
+export function getSubscribeMessageValidation(userId: User["id"] | null) {
 	return z
 		.object({
 			type: z.enum(["subscribe", "unsubscribe"]),
-			channel: z.enum(["orderbook", "tradebook", "openOrders", "positions"]),
-			assetId: z.string().refine(
-				(assetId) => {
-					if(assetId==="all") return true;
-					return assets.some((asset) => asset.id === assetId);
-				},
-				{
-					message: "assetId is not valid.",
-				}
-			),
+			channel: z.enum(["orderbook", "tradebook", "openOrders", "positions", "accountMetrics"]),
+			assetId: z
+				.string()
+				.optional()
+				.refine(
+					(assetId) => {
+						if(!assetId) return true;
+						return assets.some((asset) => asset.id === assetId);
+					},
+					{
+						message: "assetId is not valid.",
+					}
+				),
 		})
 		.superRefine((obj, ctx) => {
-			if (["orderbook", "tradebook"].includes(obj.channel) && obj.assetId==="all") {
+			if (["orderbook", "tradebook"].includes(obj.channel) && !obj.assetId) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: "Can't subscribe to all assets",
+					message: "Please provide an asset to subscribe.",
 					path: ["assetId"],
 				});
 			}

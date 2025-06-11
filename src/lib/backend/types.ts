@@ -1,6 +1,6 @@
-import { Asset, Order, Position, Resolution, Side, User } from "@/generated/prisma";
+import { Asset, Position, Resolution, Side, User } from "@/generated/prisma";
 import createRBTree from "functional-red-black-tree";
-import { OrderWithRequiredPrice, PositionWithPNL } from "../common/types";
+import { OrderWithRequiredPrice } from "../common/types";
 
 
 
@@ -33,12 +33,11 @@ export type userWithoutPassword = Omit<User, "password">;
 export type extendedUser = userWithoutPassword & {
 	maintenanceMargin: number;
 	InitialMargin: number;
-	pnl: number;
 	orderMargin: number;
 };
 
 export type UserWithPositionsAndOpenOrders = extendedUser & {
-	positions: Map<Asset["id"], PositionWithPNL>;
+	positions: Map<Asset["id"], Position>;
 } & { orders: Map<OrderWithRequiredPrice["id"], OrderWithRequiredPrice> };
 
 export type LatestCandleByAssetAndResolution = Map<

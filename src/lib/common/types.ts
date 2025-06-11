@@ -1,4 +1,4 @@
-import { Asset, Order, Order_Type, Position, Resolution, Side, Trade } from "@/generated/prisma";
+import { Asset, Order, Order_Type, Position, Resolution, Side, Trade, User } from "@/generated/prisma";
 
 export type ResolutionInfo = Map<Resolution, { symbol: string; duration: number }>;
 
@@ -48,11 +48,43 @@ export type placeOrder = {
 	leverage: number;
 };
 
-export type SubscribeMessage = {
-	type: "subscribe" | "unsubscribe";
-	channel: Channel;
-	assetId: Asset["id"];
-};
+type ChannelsWithRequiredAsset = "orderbook" | "tradebook";
+type ChannelsWithOptionalAsset = "openOrders" | "positions";
+type ChannelsWithoutAsset = "accountMetrics";
+
+export type Channel = ChannelsWithRequiredAsset | ChannelsWithOptionalAsset | ChannelsWithoutAsset;
+
+export type SubscriptionMessage =
+	| {
+			type: "subscribe" | "unsubscribe";
+			channel: ChannelsWithRequiredAsset;
+			assetId: Asset["id"];
+	  }
+	| {
+			type: "subscribe" | "unsubscribe";
+			channel: ChannelsWithOptionalAsset;
+			assetId?: Asset["id"];
+	  }
+	| { type: "subscribe" | "unsubscribe"; channel: ChannelsWithoutAsset };
+
+export type SubscriptionMessageWithUserId =
+	| {
+			type: "subscribe" | "unsubscribe";
+			channel: ChannelsWithRequiredAsset;
+			assetId: Asset["id"];
+	  }
+	| {
+			type: "subscribe" | "unsubscribe";
+			channel: ChannelsWithOptionalAsset;
+			assetId?: Asset["id"];
+			userId: User["id"];
+	  }
+	| {
+			type: "subscribe" | "unsubscribe";
+			channel: ChannelsWithoutAsset;
+			userId: User["id"];
+	  };
+
 // response types
 
 export type ResponseMessageMap = {
@@ -60,9 +92,16 @@ export type ResponseMessageMap = {
 	tradebook: TradeResponse;
 	openOrders: OrderDiffResponse;
 	positions: PositionDiffResponse;
+	accountMetrics: AccountMetricsResponse;
 };
 
-export type Channel = "orderbook" | "tradebook" | "openOrders" | "positions";
+export type AccountMetricsResponse = {
+	channel: "accountMetrics";
+	orderMargin: number;
+	initialMargin: number;
+	maintenanceMargin: number;
+	unpaidFunding: number;
+};
 
 export type OrderbookDiffResponse = {
 	channel: "orderbook";
@@ -75,7 +114,7 @@ export type OrderbookDiffResponse = {
 
 export type OrderDiffResponse = Order & { channel: "openOrders" };
 
-export type PositionDiffResponse = PositionWithContractPrice & { channel: "positions" };
+export type PositionDiffResponse = Position & { channel: "positions" };
 
 export type TradeResponse = {
 	channel: "tradebook";
@@ -92,16 +131,34 @@ export type OrderMessage = {
 	payload: CancelOrder | placeOrder;
 };
 
-export type WsResponse<P extends Channel = Channel> = {
-	[K in P]: {
-		assetId: string;
+export type _WsResponse = {
+	[K in ChannelsWithRequiredAsset]: {
 		channel: K;
+		assetId: Asset["id"];
 		message: Array<ResponseMessageMap[K]>;
 	};
-}[P];
+} & {
+	[K in ChannelsWithOptionalAsset]: {
+		channel: K;
+		assetId?: Asset["id"];
+		message: Array<ResponseMessageMap[K]>;
+	};
+} & {
+	[K in ChannelsWithoutAsset]: {
+		channel: K;
+		message: ResponseMessageMap[K];
+	};
+};
 
-export type WsMessage = SubscribeMessage | placeOrder;
+export type WsResponse = {
+	[K in keyof _WsResponse]: _WsResponse[K];
+}[Channel];
+// export type WsResponse<P extends Channel = Channel> = {
+// 	[K in P]: {
+// 		assetId: string;
+// 		channel: K;
+// 		message: Array<ResponseMessageMap[K]>;
+// 	};
+// }[P];
 
-export type PositionWithPNL = Position & { pnl: number };
-
-export type PositionWithContractPrice = Position & { contractPrice: number };
+export type WsMessage = SubscriptionMessage | placeOrder;

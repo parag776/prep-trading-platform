@@ -1,4 +1,4 @@
-import { PositionWithContractPrice, SubscribeMessage, WsResponse} from "@/lib/common/types";
+import { PositionWithContractPrice, SubscriptionMessage, WsResponse } from "@/lib/common/types";
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import { useSocketSubscribe } from "./useSocketSubscribe";
@@ -16,7 +16,6 @@ export function usePositions(userId: string) {
 			});
 		}
 	});
-	
 
 	useEffect(() => {
 		axios

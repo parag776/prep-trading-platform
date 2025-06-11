@@ -1,8 +1,4 @@
-import {
-	Channel,
-	SubscribeMessage,
-    WsResponse,
-} from "@/lib/common/types";
+import { Channel, SubscriptionMessage, WsResponse } from "@/lib/common/types";
 import { useSession } from "next-auth/react";
 import { useContext, useEffect } from "react";
 import { SocketSubscribeContext } from "../context/SocketSubscribeContext";
@@ -25,10 +21,10 @@ export function useSocketSubscribe(
 	const { socket, addSubscriber, removeSubscriber } = SocketSubscribeContextValue;
 
 	useEffect(() => {
-        const subscriber = {channel, assetId, callback};
+		const subscriber = { channel, assetId, callback };
 		addSubscriber(subscriber);
 		return () => {
-            removeSubscriber(subscriber);
+			removeSubscriber(subscriber);
 		};
 	}, []);
 }

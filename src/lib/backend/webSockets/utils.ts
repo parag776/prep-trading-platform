@@ -10,62 +10,80 @@ import {
 	OrderResponses,
 	clearAllResponses,
 	clients,
+	accountMetricsSubscribers,
+	accountMetricsResponses,
 } from "./state";
 import {
-	SubscribeMessage,
+	AccountMetricsResponse,
+	OrderbookDiffResponse,
+	OrderDiffResponse,
+	PositionDiffResponse,
+	SubscriptionMessage,
+	SubscriptionMessageWithUserId,
+	TradeResponse,
 	WsResponse,
 } from "@/lib/common/types";
 import WebSocket from "ws";
 import { getContractPrice } from "../utils";
+import { UserWithPositionsAndOpenOrders } from "../types";
 
 // assetid can be all here.. for openOrders and positions.
-export function subscribe(message: SubscribeMessage, userId: User["id"] | undefined, client: WebSocket) {
+export function subscribe(message: SubscriptionMessageWithUserId, client: WebSocket) {
 	switch (message.channel) {
 		case "orderbook":
 			const orderbookClients = orderbookSubscribers.get(message.assetId) ?? new Set<WebSocket>();
-			orderbookClients.add(client)
+			orderbookClients.add(client);
 			orderbookSubscribers.set(message.assetId, orderbookClients);
+			clients.get(client)?.add(message);
 			break;
 
 		case "tradebook":
 			let tradebookClients = tradebookSubscribers.get(message.assetId) ?? new Set<WebSocket>();
-			tradebookClients.add(client)
+			tradebookClients.add(client);
 			tradebookSubscribers.set(message.assetId, tradebookClients);
+			clients.get(client)?.add(message);
 			break;
 
 		case "openOrders":
-			if(userId){
+			if (message.userId) {
 				const key = {
-					userId,
+					userId: message.userId,
 					assetId: message.assetId,
-				}
+				};
 				const openOrderClients = openOrderSubscribers.get(key) ?? new Set<WebSocket>();
 				openOrderClients.add(client);
 				openOrderSubscribers.set(key, openOrderClients);
+				clients.get(client)?.add(message);
 			}
 			break;
 
 		case "positions":
-			if(userId){
+			if (message.userId) {
 				const key = {
-					userId,
+					userId: message.userId,
 					assetId: message.assetId,
-				}
+				};
 				const positionClients = positionSubscribers.get(key) ?? new Set<WebSocket>();
 				positionClients.add(client);
 				positionSubscribers.set(key, positionClients);
+				clients.get(client)?.add(message);
 			}
 			break;
 
+		case "accountMetrics":
+			if (message.userId) {
+				const accountMetricsClients = accountMetricsSubscribers.get(message.userId) ?? new Set<WebSocket>();
+				accountMetricsClients.add(client);
+				accountMetricsSubscribers.set(message.userId, accountMetricsClients);
+				clients.get(client)?.add(message);
+			}
+			break;
 		default:
 			break;
 	}
-	
-	// adding subscription to client. if its order/position...userId will be there because of validations..
-	clients.get(client)?.add({...message, userId})!
 }
 
-export function unSubscribe(message: SubscribeMessage, userId: User["id"] | undefined, client: WebSocket) {
+export function unSubscribe(message: SubscriptionMessageWithUserId, client: WebSocket) {
 	switch (message.channel) {
 		case "orderbook":
 			const orderbookClients = orderbookSubscribers.get(message.assetId);
@@ -75,6 +93,7 @@ export function unSubscribe(message: SubscribeMessage, userId: User["id"] | unde
 					orderbookSubscribers.delete(message.assetId);
 				}
 			}
+			clients.get(client)?.delete({ ...message, type: "subscribe" });
 			break;
 
 		case "tradebook":
@@ -85,11 +104,12 @@ export function unSubscribe(message: SubscribeMessage, userId: User["id"] | unde
 					tradebookSubscribers.delete(message.assetId);
 				}
 			}
+			clients.get(client)?.delete({ ...message, type: "subscribe" });
 			break;
 
 		case "openOrders":
-			if (userId) {
-				const key = { userId, assetId: message.assetId };
+			if (message.userId) {
+				const key = { userId: message.userId, assetId: message.assetId };
 				const openOrderClients = openOrderSubscribers.get(key);
 				if (openOrderClients) {
 					openOrderClients.delete(client);
@@ -97,12 +117,13 @@ export function unSubscribe(message: SubscribeMessage, userId: User["id"] | unde
 						openOrderSubscribers.delete(key);
 					}
 				}
+				clients.get(client)?.delete({ ...message, type: "subscribe" });
 			}
 			break;
 
 		case "positions":
-			if (userId) {
-				const key = { userId, assetId: message.assetId };
+			if (message.userId) {
+				const key = { userId: message.userId, assetId: message.assetId };
 				const positionClients = positionSubscribers.get(key);
 				if (positionClients) {
 					positionClients.delete(client);
@@ -110,42 +131,128 @@ export function unSubscribe(message: SubscribeMessage, userId: User["id"] | unde
 						positionSubscribers.delete(key);
 					}
 				}
+				clients.get(client)?.delete({ ...message, type: "subscribe" });
 			}
 			break;
-
+		case "accountMetrics":
+			if (message.userId) {
+				const accountMetricsClients = accountMetricsSubscribers.get(message.userId);
+				if (accountMetricsClients) {
+					accountMetricsClients.delete(client);
+					if (accountMetricsClients.size === 0) {
+						accountMetricsSubscribers.delete(message.userId);
+					}
+				}
+				clients.get(client)?.delete({ ...message, type: "subscribe" });
+			}
+			break;
 		default:
 			break;
 	}
+}
 
-	// removing subscription from client. if its order/position...userId will be there because of validations..
-	clients.get(client)?.add({...message, userId, type: "subscribe"})!
+export function handleClientConnect(client: WebSocket) {
+	clients.set(client, new Set<SubscriptionMessageWithUserId>());
 }
 
 // suppose some client disconnects without unsubscribing, this handles cleanup.....this function is kinda slow
-
-export function handleClientConnect(client: WebSocket){
-	clients.set(client, new Set<SubscribeMessage & {userId?: User["id"]}>());
-}
-
 export function handleClientDisconnect(client: WebSocket) {
-
 	const subscriptions = clients.get(client);
 
-	if(subscriptions){
-		for(const subscription of subscriptions){
-			unSubscribe({type: "unsubscribe", channel: subscription.channel, assetId: subscription.assetId}, subscription.userId, client);
+	if (subscriptions) {
+		for (const subscription of subscriptions) {
+			unSubscribe(subscription, client);
 		}
 	}
 
 	clients.delete(client);
 }
 
+export function addPositionResponse(position: Position) {
+	const response: PositionDiffResponse = { ...position, channel: "positions" };
+
+	// responses for where client is asking for a specific asset
+	{
+		const key = { userId: position.userId, assetId: position.assetId };
+		const responseArray = positionResponses.get(key) ?? [];
+		responseArray.push(response);
+		positionResponses.set(key, responseArray);
+	}
+
+	// responses for where client is asking for not specific asset...so basically all assets.
+	{
+		const key = { userId: position.userId };
+		const responseArray = positionResponses.get(key) ?? [];
+		responseArray.push(response);
+		positionResponses.set(key, responseArray);
+	}
+}
+
+export function addOrderbookDiffResponse(assetId: Asset["id"], side: Side, price: number, changeInQuantity: number) {
+	const responseArray = orderbookResponses.get(assetId) ?? [];
+	const response: OrderbookDiffResponse = {
+		channel: "orderbook",
+		assetId,
+		side,
+		price,
+		changeInQuantity,
+		updatedAt: new Date(Date.now()),
+	};
+	responseArray.push(response);
+	orderbookResponses.set(assetId, responseArray);
+}
+
+export function addOrderDiffResponse(order: Order) {
+	const response: OrderDiffResponse = { ...order, channel: "openOrders" };
+	response.updatedAt = new Date(Date.now());
+
+	// responses for where client is asking for a specific asset
+	{
+		const key = { userId: order.userId, assetId: order.assetId };
+		const responseArray = OrderResponses.get(key) ?? [];
+		responseArray.push(response);
+		OrderResponses.set(key, responseArray);
+	}
+
+	// responses for where client is asking for not specific asset...so basically all assets.
+	{
+		const key = { userId: order.userId };
+		const responseArray = OrderResponses.get(key) ?? [];
+		responseArray.push(response);
+		OrderResponses.set(key, responseArray);
+	}
+}
+
+export function addTradeResponse(trade: Trade) {
+	const responseArray = tradeResponses.get(trade.assetId) ?? [];
+	const response: TradeResponse = {
+		channel: "tradebook",
+		id: trade.id,
+		createdAt: trade.createdAt,
+		assetId: trade.assetId,
+		price: trade.price,
+		quantity: trade.quantity,
+	};
+	responseArray.push(response);
+	tradeResponses.set(trade.assetId, responseArray);
+}
+
+export function addAccountMetricResponse(user: UserWithPositionsAndOpenOrders) {
+
+	const accountMetric: AccountMetricsResponse = {
+		channel: "accountMetrics",
+		orderMargin: user.orderMargin,
+		initialMargin: user.InitialMargin,
+		maintenanceMargin: user.maintenanceMargin,
+		unpaidFunding: user.funding_unpaid
+	}
+	accountMetricsResponses.set(user.id, accountMetric);
+}
 
 // order responses and trade responses are being sent as an array. please remember this.
 export function respondToSubscribers() {
-
-	function respond(subscribers: Set<WebSocket> | undefined, response: WsResponse){
-		if(subscribers){
+	function respond(subscribers: Set<WebSocket> | undefined, response: WsResponse) {
+		if (subscribers) {
 			for (const client of subscribers) {
 				client.send(JSON.stringify(response));
 			}
@@ -153,99 +260,53 @@ export function respondToSubscribers() {
 	}
 
 	// respond to orderbook..
-	for(const [assetId, responses] of orderbookResponses){
-
-		if(!responses.length) continue;
+	for (const [assetId, responses] of orderbookResponses) {
+		if (!responses.length) continue;
 		const subscribers = orderbookSubscribers.get(assetId);
-		const response: WsResponse = {channel: "orderbook", assetId, message: responses};
-		respond(subscribers, response);
+		const wsResponse: WsResponse = { channel: "orderbook", assetId, message: responses };
+		respond(subscribers, wsResponse);
 	}
 
 	// respond to tradebook
-	for(const [assetId, responses] of tradeResponses){
-
-		if(!responses.length) continue;
-		const response: WsResponse = {channel: "tradebook", assetId, message: responses};
+	for (const [assetId, responses] of tradeResponses) {
+		if (!responses.length) continue;
+		const wsResponse: WsResponse = { channel: "tradebook", assetId, message: responses };
 		const subscribers = tradebookSubscribers.get(assetId);
-		respond(subscribers, response);
+		respond(subscribers, wsResponse);
 	}
 
 	// respond to positions
 	for (const [key, responses] of positionResponses) {
 		if (!responses.length) continue;
 		const subscribers = positionSubscribers.get(key);
-		const response: WsResponse = {channel: "positions", assetId: key.assetId, message: responses};
-		respond(subscribers, response);
-
-		// respond to clients who have subscribed for all assets
-		const responseForAll: WsResponse = {...response, assetId: "all"};
-		const subscribersForAll = positionSubscribers.get({...key, assetId: "all"});
-		respond(subscribersForAll, responseForAll);
+		const wsResponse: WsResponse = {
+			channel: "positions",
+			assetId: key.assetId,
+			message: responses,
+		};
+		respond(subscribers, wsResponse);
 	}
 
 	for (const [key, responses] of OrderResponses) {
 		if (!responses.length) continue;
 		const subscribers = openOrderSubscribers.get(key);
-		const response: WsResponse = {channel: "openOrders", assetId: key.assetId, message: responses};
-		respond(subscribers, response);
+		const wsResponse: WsResponse = {
+			channel: "openOrders",
+			assetId: key.assetId,
+			message: responses,
+		};
+		respond(subscribers, wsResponse);
+	}
 
-		// respond to clients who have subscribed for all assets
-		const responseForAll: WsResponse = {...response, assetId: "all"};
-		const subscribersForAll = openOrderSubscribers.get({...key, assetId: "all"});
-		respond(subscribersForAll, responseForAll);
+	for (const [userId, response] of accountMetricsResponses) {
+		const subscribers = accountMetricsSubscribers.get(userId);
+		const wsResponse: WsResponse = {
+			channel: "accountMetrics",
+			message: response,
+		};
+		respond(subscribers, wsResponse);
 	}
 
 	// empty all the responses.
-	clearAllResponses()
-}
-
-export function addPositionResponse(position: Position) {
-	const key = {userId: position.userId, assetId: position.assetId};
-	const responseArray = positionResponses.get(key) ?? [];
-	responseArray.push({...position, contractPrice: -1, channel: "positions"});
-	positionResponses.set(key, responseArray);
-}
-
-export function updatePositionResponsesContractPrice(){
-	for(const [key, responses] of positionResponses){
-		const contractPrice = getContractPrice(key.assetId);
-		for(const response of responses){
-			response.contractPrice = contractPrice;
-		}
-	}
-}
-
-export function addOrderbookDiffResponse(
-	assetId: Asset["id"],
-	side: Side,
-	price: number,
-	changeInQuantity: number
-) {
-	orderbookResponses.get(assetId)?.push({
-		channel: "orderbook",
-		assetId,
-		side,
-		price,
-		changeInQuantity,
-		updatedAt: new Date(Date.now()),
-	});
-}
-
-export function addOrderDiffResponse(order: Order) {
-	const key = {userId: order.userId, assetId: order.assetId};
-	const responseArray = OrderResponses.get(key) ?? [];
-	order.updatedAt = new Date(Date.now());
-	responseArray.push({...order, channel: "openOrders"})
-	OrderResponses.set(key, responseArray);
-}
-
-export function addTradeResponse(trade: Trade) {
-	tradeResponses.get(trade.assetId)?.push({
-		channel: "tradebook",
-		id: trade.id,
-		createdAt: trade.createdAt,
-		assetId: trade.assetId,
-		price: trade.price,
-		quantity: trade.quantity,
-	});
+	clearAllResponses();
 }

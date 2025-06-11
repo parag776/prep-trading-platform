@@ -1,67 +1,28 @@
-import {
-	Asset,
-	Order,
-	Order_Status,
-	Order_Type,
-	Position,
-	Prisma,
-	Side,
-	Trade,
-	User,
-} from "@/generated/prisma";
+import { Asset, Order, Order_Status, Position, Side, Trade, User } from "@/generated/prisma";
 import { calculateMarginAndCheckLiquidity } from "./marginRequirement";
 import { detailedUsersState, latestCandles, orderbooks } from "./store";
 import { AppError, ErrorType } from "../common/error";
 import config from "../../../config.json";
-import {
-	adjustCandle,
-	calculateFee,
-	calculateMaintenanceMargin,
-	calculateMarginWithFee,
-	calculateMarginWithoutFee,
-} from "./utils";
-import { OrderBook, OrderWithRequiredPrice, UserWithPositionsAndOpenOrders } from "./types";
-import createRBTree from "functional-red-black-tree";
-import prisma, {
-	addOrderToDB,
-	addPositionToDB,
-	appendUserBalanceInDB,
-	deletePositionFromDB,
-	updateLatestCandleToDB,
-	updateOrderInDB,
-	updatePositionInDB,
-} from "./database";
+import { adjustCandle, calculateFee, calculateMaintenanceMargin, calculateMarginWithFee, calculateMarginWithoutFee, calculateUserPnl } from "./utils";
+import { OrderBook } from "./types";
+import prisma, { addOrderToDB, addPositionToDB, appendUserBalanceInDB, deletePositionFromDB, updateLatestCandleToDB, updateOrderInDB, updatePositionInDB } from "./database";
 import { v4 as uuid } from "uuid";
 import { resolutionInfo } from "../common/data";
 import { databaseActions } from "./manager";
-import { positionResponses } from "./webSockets/state";
-import {
-	addOrderDiffResponse,
-	addOrderbookDiffResponse,
-	addPositionResponse,
-	addTradeResponse,
-} from "./webSockets/utils";
+import { addAccountMetricResponse, addOrderDiffResponse, addOrderbookDiffResponse, addPositionResponse, addTradeResponse } from "./webSockets/utils";
+import { OrderWithRequiredPrice } from "../common/types";
 
 // createOrder(order, orderbook, orderPrice, remainingQuantity, average_filled_price)
 
-function createOrder(
-	order: Order,
-	average_filled_price: number,
-	filled_quantity: number,
-	orderbook: OrderBook
-) {
+function createOrder(order: Order, average_filled_price: number, filled_quantity: number, orderbook: OrderBook) {
 	const remaining_quantity = order.quantity - order.filled_quantity;
 	if (order.price && remaining_quantity) {
 		// updated userMargin
-		const margin = calculateMarginWithFee(
-			order.price,
-			remaining_quantity,
-			order.leverage,
-			config.maker_fee
-		);
+		const margin = calculateMarginWithFee(order.price, remaining_quantity, order.leverage, config.maker_fee);
 		const user = detailedUsersState.get(order.userId)!;
 
 		user.orderMargin += margin;
+		addAccountMetricResponse(user);
 
 		//order
 		order.filled_quantity = filled_quantity;
@@ -72,15 +33,9 @@ function createOrder(
 
 		// added order to orderbook
 		if (order.side === Side.ASK) {
-			orderbook.askOrderbook.orders = orderbook.askOrderbook.orders.insert(
-				order as OrderWithRequiredPrice,
-				null
-			);
+			orderbook.askOrderbook.orders = orderbook.askOrderbook.orders.insert(order as OrderWithRequiredPrice, null);
 		} else {
-			orderbook.bidOrderbook.orders = orderbook.bidOrderbook.orders.insert(
-				order as OrderWithRequiredPrice,
-				null
-			);
+			orderbook.bidOrderbook.orders = orderbook.bidOrderbook.orders.insert(order as OrderWithRequiredPrice, null);
 		}
 
 		addOrderbookDiffResponse(order.assetId, order.side, order.price, remaining_quantity);
@@ -100,6 +55,7 @@ function decreaseOrder(userId: User["id"], orderId: Order["id"], fill: number) {
 	const margin = calculateMarginWithFee(order.price, fill, order.leverage, config.maker_fee);
 	// reducing order margin
 	user.orderMargin -= margin;
+	addAccountMetricResponse(user);
 
 	// removing order from orderbook and user.
 	if (order.side === Side.ASK) {
@@ -110,9 +66,7 @@ function decreaseOrder(userId: User["id"], orderId: Order["id"], fill: number) {
 	user.orders.delete(order.id);
 
 	const total_filled_quantity = order.filled_quantity + fill;
-	const average_filled_price =
-		(order.filled_quantity * order.average_filled_price + fill * order.price) /
-		total_filled_quantity;
+	const average_filled_price = (order.filled_quantity * order.average_filled_price + fill * order.price) / total_filled_quantity;
 
 	order.filled_quantity = total_filled_quantity;
 	order.average_filled_price = average_filled_price;
@@ -137,18 +91,14 @@ function decreaseOrder(userId: User["id"], orderId: Order["id"], fill: number) {
 	databaseActions.push(() => updateOrderInDB(order));
 }
 
-function cancelOrder(userId: User["id"], orderId: Order["id"]) {
+export function cancelOrder(userId: User["id"], orderId: Order["id"]) {
 	const user = detailedUsersState.get(userId)!;
 	const order = user.orders.get(orderId)!;
 	const remaining_quantity = order.quantity - order.filled_quantity;
-	const margin = calculateMarginWithFee(
-		order.price,
-		remaining_quantity,
-		order.leverage,
-		config.maker_fee
-	);
+	const margin = calculateMarginWithFee(order.price, remaining_quantity, order.leverage, config.maker_fee);
 	// reducing order margin
 	user.orderMargin -= margin;
+	addAccountMetricResponse(user);
 
 	// removing order from orderbook and user.
 	if (order.side === Side.ASK) {
@@ -168,14 +118,7 @@ function cancelOrder(userId: User["id"], orderId: Order["id"]) {
 	databaseActions.push(() => updateOrderInDB(order));
 }
 
-function makeTrade(
-	price: number,
-	quantity: number,
-	assetId: string,
-	buyerId: User["id"],
-	sellerId: User["id"],
-	isLastTrade: Boolean
-) {
+function makeTrade(price: number, quantity: number, assetId: string, buyerId: User["id"], sellerId: User["id"], isLastTrade: Boolean) {
 	const trade: Trade = {
 		id: uuid(),
 		buyerId: buyerId,
@@ -220,32 +163,21 @@ function closeLiquidatedPosition(userId: User["id"], assetId: Asset["id"]) {
 	user.positions.delete(assetId);
 }
 
-function makePosition(
-	userId: User["id"],
-	assetId: Asset["id"],
-	side: Side,
-	quantity: number,
-	price: number,
-	leverage: number,
-	is_maker: boolean
-) {
+function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quantity: number, price: number, leverage: number, is_maker: boolean) {
 	const user = detailedUsersState.get(userId)!;
 	const position = user.positions.get(assetId);
 
 	// taking fee
-	const fee = calculateFee(
-		price,
-		quantity,
-		leverage,
-		is_maker ? config.maker_fee : config.taker_fee
-	);
+	const fee = calculateFee(price, quantity, leverage, is_maker ? config.maker_fee : config.taker_fee);
 	user.usdc -= fee;
+	addAccountMetricResponse(user);
 	databaseActions.push(() => appendUserBalanceInDB(user.id, -fee));
 
 	// case where position did not exist already.
 	if (!position) {
-		user.maintenanceMargin+=calculateMaintenanceMargin(price, quantity);
+		user.maintenanceMargin += calculateMaintenanceMargin(price, quantity);
 		user.InitialMargin += calculateMarginWithoutFee(quantity, price, leverage);
+		addAccountMetricResponse(user);
 
 		const newPosition: Position = {
 			id: uuid(),
@@ -258,7 +190,7 @@ function makePosition(
 			createdAt: new Date(Date.now()),
 			updatedAt: new Date(Date.now()),
 		};
-		user.positions.set(assetId, { ...newPosition, pnl: 0 });
+		user.positions.set(assetId, newPosition);
 		databaseActions.push(() => addPositionToDB(newPosition));
 		addPositionResponse(newPosition);
 		return;
@@ -267,17 +199,14 @@ function makePosition(
 	// cases where position exisisted --->
 
 	// first things first making all pnl = 0 <-----> because i will forget it and it will be the biggest reason for a bug.
-	user.pnl -= position.pnl;
-	position.pnl = 0;
 
 	// case where we are just adding to the position.
 	if (position.side === side) {
 		user.InitialMargin += calculateMarginWithoutFee(quantity, price, leverage);
-		user.maintenanceMargin+=calculateMaintenanceMargin(price, quantity);
+		user.maintenanceMargin += calculateMaintenanceMargin(price, quantity);
 
 		const new_quantity = position.quantity + quantity;
-		const new_average_price =
-			(position.average_price * position.quantity + price * quantity) / new_quantity;
+		const new_average_price = (position.average_price * position.quantity + price * quantity) / new_quantity;
 
 		position.quantity = new_quantity;
 		position.average_price = new_average_price;
@@ -285,6 +214,7 @@ function makePosition(
 
 		databaseActions.push(() => updatePositionInDB(position));
 		addPositionResponse(position);
+		addAccountMetricResponse(user);
 		return;
 	}
 
@@ -305,6 +235,7 @@ function makePosition(
 
 		databaseActions.push(() => updatePositionInDB(position));
 		addPositionResponse(position);
+		addAccountMetricResponse(user);
 	} else if (position.quantity === quantity) {
 		// reducing earlier margin that was already added.
 		user.InitialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
@@ -322,6 +253,7 @@ function makePosition(
 		// now since the position is 0 remove the position from position Array;
 		databaseActions.push(() => deletePositionFromDB(position));
 		addPositionResponse(position);
+		addAccountMetricResponse(user);
 
 		// deleting the state.
 		user.positions.delete(assetId);
@@ -348,6 +280,7 @@ function makePosition(
 
 		databaseActions.push(() => updatePositionInDB(position));
 		addPositionResponse(position);
+		addAccountMetricResponse(user);
 	}
 }
 
@@ -357,15 +290,11 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 	// this is checking if enough liquidity is present to process the order..else throw an error.
 	const marginRequired = calculateMarginAndCheckLiquidity(order);
 
-	if (isLiquidation) {
-		const accountEquity =
-			user.usdc - user.InitialMargin - user.orderMargin - user.funding_unpaid + user.pnl;
-		if (marginRequired > accountEquity) {
-			throw new AppError(
-				ErrorType.InsufficientMarginError,
-				`${user.name} with user id ${user.id} doesn't have enough margin for the trade.`,
-				422
-			);
+	if (!isLiquidation) {
+		const accountEquity = user.usdc - user.funding_unpaid + calculateUserPnl(user);
+		const availableMargin = accountEquity - user.InitialMargin - user.orderMargin;
+		if (availableMargin < marginRequired) {
+			throw new AppError(ErrorType.InsufficientMarginError, `${user.name} with user id ${user.id} doesn't have enough margin for the trade.`, 422);
 		}
 	}
 
@@ -381,33 +310,6 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 		for (let bidOrder of orderbook.bidOrderbook.orders.keys) {
 			// checking condition -> asking price is greater than maximum bidding price. (maker)
 			if (orderPrice > bidOrder.price) {
-				let average_filled_price = 0;
-				if (filledQuantity > 0) {
-					average_filled_price = currentPositionSize / filledQuantity;
-				}
-
-				// create order and update orderbook (take care of margin, remember margin is here with fee)
-				createOrder(
-					{ ...order, price: orderPrice },
-					average_filled_price,
-					filledQuantity,
-					orderbook
-				);
-				if (isLiquidation) {
-					closeLiquidatedPosition(user.id, order.assetId);
-				} else {
-					makePosition(
-						user.id,
-						order.assetId,
-						order.side,
-						filledQuantity,
-						average_filled_price,
-						order.leverage,
-						false
-					);
-				}
-
-				remainingQuantity = 0;
 				break;
 			}
 
@@ -427,38 +329,15 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 				decreaseOrder(bidOrder.userId, bidOrder.id, remainingQuantity);
 
 				// making position for the one whose order was matched.
-				makePosition(
-					bidOrder.userId,
-					bidOrder.assetId,
-					bidOrder.side,
-					remainingQuantity,
-					bidOrder.price,
-					bidOrder.leverage,
-					true
-				);
+				makePosition(bidOrder.userId, bidOrder.assetId, bidOrder.side, remainingQuantity, bidOrder.price, bidOrder.leverage, true);
 
 				// making position for current user who placed the order.
 				if (isLiquidation) {
 					closeLiquidatedPosition(user.id, order.assetId);
 				} else {
-					makePosition(
-						user.id,
-						order.assetId,
-						order.side,
-						filledQuantity,
-						average_filled_price,
-						order.leverage,
-						false
-					);
+					makePosition(user.id, order.assetId, order.side, filledQuantity, average_filled_price, order.leverage, false);
 				}
-				makeTrade(
-					bidOrder.price,
-					remainingQuantity,
-					order.assetId,
-					bidOrder.userId,
-					order.userId,
-					true
-				);
+				makeTrade(bidOrder.price, remainingQuantity, order.assetId, bidOrder.userId, order.userId, true);
 
 				remainingQuantity = 0;
 				break;
@@ -469,25 +348,31 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 			decreaseOrder(bidOrder.userId, bidOrder.id, bidOrder.quantity);
 
 			// making position for whose order was matched.
-			makePosition(
-				bidOrder.userId,
-				bidOrder.assetId,
-				bidOrder.side,
-				bidOrder.quantity,
-				bidOrder.price,
-				bidOrder.leverage,
-				true
-			);
-			makeTrade(
-				bidOrder.price,
-				bidOrder.quantity,
-				order.assetId,
-				bidOrder.userId,
-				order.userId,
-				false
-			);
+			makePosition(bidOrder.userId, bidOrder.assetId, bidOrder.side, bidOrder.quantity, bidOrder.price, bidOrder.leverage, true);
+			makeTrade(bidOrder.price, bidOrder.quantity, order.assetId, bidOrder.userId, order.userId, false);
 
+			filledQuantity += bidOrder.quantity;
+			currentPositionSize += bidOrder.quantity * bidOrder.price;
 			remainingQuantity -= bidOrder.quantity;
+		}
+
+		if (remainingQuantity) {
+			let average_filled_price = 0;
+			if (filledQuantity > 0) {
+				average_filled_price = currentPositionSize / filledQuantity;
+
+				// making position for the order filled.
+				if (isLiquidation) {
+					closeLiquidatedPosition(user.id, order.assetId);
+				} else {
+					makePosition(user.id, order.assetId, order.side, filledQuantity, average_filled_price, order.leverage, false);
+				}
+			}
+
+			// create order and update orderbook (take care of margin, remember margin is here with fee)
+			createOrder({ ...order, price: orderPrice }, orderPrice, remainingQuantity, orderbook);
+
+			remainingQuantity = 0;
 		}
 	} else {
 		let remainingQuantity = order.quantity;
@@ -499,33 +384,6 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 		for (let askOrder of orderbook.askOrderbook.orders.keys) {
 			// checking condition -> asking price is greater than maximum bidding price. (maker)
 			if (orderPrice < askOrder.price) {
-				let average_filled_price = 0;
-				if (filledQuantity > 0) {
-					average_filled_price = currentPositionSize / filledQuantity;
-				}
-
-				// create order and update orderbook (take care of margin, remember margin is here with fee)
-				createOrder(
-					{ ...order, price: orderPrice },
-					average_filled_price,
-					filledQuantity,
-					orderbook
-				);
-				if (isLiquidation) {
-					closeLiquidatedPosition(user.id, order.assetId);
-				} else {
-					makePosition(
-						user.id,
-						order.assetId,
-						order.side,
-						filledQuantity,
-						average_filled_price,
-						order.leverage,
-						false
-					);
-				}
-
-				remainingQuantity = 0;
 				break;
 			}
 
@@ -545,38 +403,15 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 				decreaseOrder(askOrder.userId, askOrder.id, remainingQuantity);
 
 				// making position for the one whose order was matched.
-				makePosition(
-					askOrder.userId,
-					askOrder.assetId,
-					askOrder.side,
-					remainingQuantity,
-					askOrder.price,
-					askOrder.leverage,
-					true
-				);
+				makePosition(askOrder.userId, askOrder.assetId, askOrder.side, remainingQuantity, askOrder.price, askOrder.leverage, true);
 
 				// making position for current user who placed the order.
 				if (isLiquidation) {
 					closeLiquidatedPosition(user.id, order.assetId);
 				} else {
-					makePosition(
-						user.id,
-						order.assetId,
-						order.side,
-						filledQuantity,
-						average_filled_price,
-						order.leverage,
-						false
-					);
+					makePosition(user.id, order.assetId, order.side, filledQuantity, average_filled_price, order.leverage, false);
 				}
-				makeTrade(
-					askOrder.price,
-					remainingQuantity,
-					order.assetId,
-					order.userId,
-					askOrder.userId,
-					true
-				);
+				makeTrade(askOrder.price, remainingQuantity, order.assetId, order.userId, askOrder.userId, true);
 
 				remainingQuantity = 0;
 				break;
@@ -587,27 +422,29 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 			decreaseOrder(askOrder.userId, askOrder.id, askOrder.quantity);
 
 			// making position for whose order was matched.
-			makePosition(
-				askOrder.userId,
-				askOrder.assetId,
-				askOrder.side,
-				askOrder.quantity,
-				askOrder.price,
-				askOrder.leverage,
-				true
-			);
-			makeTrade(
-				askOrder.price,
-				askOrder.quantity,
-				order.assetId,
-				order.userId,
-				askOrder.userId,
-				false
-			);
+			makePosition(askOrder.userId, askOrder.assetId, askOrder.side, askOrder.quantity, askOrder.price, askOrder.leverage, true);
+			makeTrade(askOrder.price, askOrder.quantity, order.assetId, order.userId, askOrder.userId, false);
 
+			filledQuantity += askOrder.quantity;
+			currentPositionSize += askOrder.quantity * askOrder.price;
 			remainingQuantity -= askOrder.quantity;
 		}
-	}
 
-	//
+		if (remainingQuantity) {
+			let average_filled_price = 0;
+			if (filledQuantity > 0) {
+				average_filled_price = currentPositionSize / filledQuantity;
+				if (isLiquidation) {
+					closeLiquidatedPosition(user.id, order.assetId);
+				} else {
+					makePosition(user.id, order.assetId, order.side, filledQuantity, average_filled_price, order.leverage, false);
+				}
+			}
+
+			// create order and update orderbook (take care of margin, remember margin is here with fee)
+			createOrder({ ...order, price: orderPrice }, orderPrice, remainingQuantity, orderbook);
+
+			remainingQuantity = 0;
+		}
+	}
 }

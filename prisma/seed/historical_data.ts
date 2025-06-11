@@ -2,8 +2,8 @@ import { Historical_Data, PrismaPromise, Resolution } from "@/generated/prisma";
 
 import { assets } from "./asset";
 import axios, { AxiosResponse } from "axios";
-import { getAllResolutionData } from "@/lib/backend/utils";
 import prisma from "./prismaClient";
+import { getAllResolutionData } from "./utils";
 
 const futureKlinesURL = "https://fapi.binance.com/fapi/v1/klines";
 

@@ -1,18 +1,15 @@
 import { Asset } from "@/generated/prisma";
-import { WsResponse, Channel, SubscribeMessage } from "@/lib/common/types";
+import { WsResponse, Channel, SubscriptionMessage } from "@/lib/common/types";
 import { createContext, ReactNode, useState, useEffect } from "react";
 import { WebSocket } from "ws";
 // that channel should also be subscribed for a particular asset id ... fix this....
 
-
 type Subscription = {
 	channel: Channel;
 	assetId: Asset["id"];
-}
-
-type Subscriber = Subscription & {callback: (response: WsResponse) => void
 };
 
+type Subscriber = Subscription & { callback: (response: WsResponse) => void };
 
 type SocketSubscribeContextValue = {
 	socket: WebSocket;
@@ -25,7 +22,9 @@ export const SocketSubscribeContext = createContext<SocketSubscribeContextValue 
 export function SocketSubscribeProvider({ children }: { children: ReactNode }) {
 	const [socket, setSocket] = useState<WebSocket | null>(null);
 	const [subscribers, setSubscribers] = useState<Array<Subscriber>>([]);
-	const [subscriptions, setSubscriptions] = useState<Map<Subscription, number>>(new Map<Subscription, number>());
+	const [subscriptions, setSubscriptions] = useState<Map<Subscription, number>>(
+		new Map<Subscription, number>()
+	);
 
 	useEffect(() => {
 		const socket = new WebSocket("url");
@@ -52,72 +51,68 @@ export function SocketSubscribeProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	const addSubscriber: (subscriber: Subscriber) => void = (subscriber: Subscriber) => {
+		const { channel, assetId } = subscriber;
 
-		const {channel, assetId} = subscriber;
-
-		const subscriptionCount = subscriptions.get({channel, assetId})
-		if(!subscriptionCount){
-
+		const subscriptionCount = subscriptions.get({ channel, assetId });
+		if (!subscriptionCount) {
 			// subscribing
-			const subMessage: SubscribeMessage = {
+			const subMessage: SubscriptionMessage = {
 				type: "subscribe",
 				channel,
 				assetId,
 			};
 			socket?.send(JSON.stringify(subMessage));
-			
-			// 
-			setSubscriptions((subscriptions)=>{
+
+			//
+			setSubscriptions((subscriptions) => {
 				const newSubscriptions = structuredClone(subscriptions);
-				newSubscriptions.set({channel, assetId}, 1);
-				return newSubscriptions
-			})
+				newSubscriptions.set({ channel, assetId }, 1);
+				return newSubscriptions;
+			});
 		} else {
-			setSubscriptions((subscriptions)=>{
+			setSubscriptions((subscriptions) => {
 				const newSubscriptions = structuredClone(subscriptions);
-				newSubscriptions.set({channel, assetId}, subscriptionCount+1);
-				return newSubscriptions
-			})
+				newSubscriptions.set({ channel, assetId }, subscriptionCount + 1);
+				return newSubscriptions;
+			});
 		}
 		setSubscribers((subscribers) => [...subscribers, subscriber]);
 	};
 
-	const removeSubscriber: (subscriber: Subscriber) => void = (subscriber: Subscriber) =>{
-		
-		const {channel, assetId} = subscriber;
-		const UnSubMessage: SubscribeMessage = {
+	const removeSubscriber: (subscriber: Subscriber) => void = (subscriber: Subscriber) => {
+		const { channel, assetId } = subscriber;
+		const UnSubMessage: SubscriptionMessage = {
 			type: "unsubscribe",
 			channel,
 			assetId,
 		};
 
-		const subscriptionCount = subscriptions.get({channel, assetId})
-		if(!subscriptionCount) return;
+		const subscriptionCount = subscriptions.get({ channel, assetId });
+		if (!subscriptionCount) return;
 
-		if(subscriptionCount===1){
-
+		if (subscriptionCount === 1) {
 			socket?.send(JSON.stringify(UnSubMessage));
 
-			setSubscriptions((subscriptions)=>{
-				const newSubscriptions =  structuredClone(subscriptions);
-				newSubscriptions.delete({channel, assetId});
+			setSubscriptions((subscriptions) => {
+				const newSubscriptions = structuredClone(subscriptions);
+				newSubscriptions.delete({ channel, assetId });
 				return newSubscriptions;
-			})
+			});
 		} else {
-			const newSubscriptions =  structuredClone(subscriptions);
-			newSubscriptions.set({channel, assetId}, subscriptionCount-1);
+			const newSubscriptions = structuredClone(subscriptions);
+			newSubscriptions.set({ channel, assetId }, subscriptionCount - 1);
 			return newSubscriptions;
 		}
 
 		setSubscribers((subscribers) => {
 			const newSubscribers = [];
-			for(const cur of subscribers){
-				if(cur===subscriber) continue;
-				newSubscribers.push(cur)
+			for (const cur of subscribers) {
+				if (cur === subscriber) continue;
+				newSubscribers.push(cur);
 			}
-			return newSubscribers
-		})
-	}
+			return newSubscribers;
+		});
+	};
 
 	if (!socket) return null;
 

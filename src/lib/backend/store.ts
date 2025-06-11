@@ -6,19 +6,9 @@ import {
 	OrderBook,
 	UserWithPositionsAndOpenOrders,
 } from "./types";
-import { v4 as uuid } from "uuid";
-import {
-	Asset,
-	Order,
-	PrismaClient,
-	Side,
-	Resolution,
-	User,
-	Order_Status,
-} from "../../generated/prisma";
+import { Asset, PrismaClient, Side, Resolution, User, Order_Status, Position } from "../../generated/prisma";
 import { OrderWithRequiredPrice } from "../common/types";
 import createRBTree from "functional-red-black-tree";
-import { PositionWithPNL, ResolutionInfo } from "../common/types";
 import config from "../../../config.json";
 import {
 	calculateMaintenanceMargin,
@@ -26,8 +16,9 @@ import {
 	calculateMarginWithFee,
 	getContractPrice,
 } from "./utils";
-import { streamSpotPrices } from "./spotFetcher";
+import { streamSpotPrices } from "./dataFetchers/spotFetcher";
 import axios from "axios";
+import { streamMarkPrices } from "./dataFetchers/markFetcher";
 
 const prisma = new PrismaClient();
 
@@ -37,6 +28,7 @@ export let orderbooks: Map<Asset["id"], OrderBook>;
 export let latestCandles: LatestCandleByAssetAndResolution;
 export let detailedUsersState: Map<User["id"], UserWithPositionsAndOpenOrders>;
 export let spotPrices: Map<Asset["id"], number>;
+export let markPrices: Map<Asset["id"], number>;
 
 async function getAssets() {
 	assets = await prisma.asset.findMany();
@@ -176,6 +168,31 @@ async function getLatestCandles() {
 	}
 }
 
+async function getMarkPrices() {
+	try {
+		markPrices = new Map(
+			await Promise.all(
+				assets.map(async (asset) => {
+					const res = await axios.get(
+						`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${asset.symbol}USDC`
+					);
+					return [asset.id, Number(res.data.markPrice)] as [Asset["id"], number];
+				})
+			)
+		);
+	} catch (e) {
+		markPrices = new Map(
+			assets.map((asset) => {
+				return [
+					asset.id,
+					latestCandles.get({ assetId: asset.id, resolution: Resolution.ONE_MINUTE })!
+						.close,
+				] as [Asset["id"], number];
+			})
+		);
+	}
+}
+
 // here non cash equity = IM of positions, due funding, pnl of positions
 // export type UserWithPositionsAndOpenOrders = User & {
 //   NonCashEquity: number;
@@ -201,9 +218,8 @@ async function getDetailedUsersState() {
 			...user,
 			maintenanceMargin: 0,
 			InitialMargin: 0,
-			pnl: 0,
 			orderMargin: 0,
-			positions: new Map<Asset["id"], PositionWithPNL>(),
+			positions: new Map<Asset["id"], Position>(),
 			orders: new Map<OrderWithRequiredPrice["id"], OrderWithRequiredPrice>(),
 		};
 		for (let position of user.positions) {
@@ -216,12 +232,7 @@ async function getDetailedUsersState() {
 				position.average_price,
 				position.quantity
 			);
-
-			const pnl =
-				(position.average_price - getContractPrice(position.assetId)) * position.quantity;
-			detailedUserState.pnl += pnl;
-
-			detailedUserState.positions.set(position.assetId, { ...position, pnl });
+			detailedUserState.positions.set(position.assetId, position);
 		}
 		detailedUsersState.set(user.id, detailedUserState);
 	}
@@ -264,8 +275,10 @@ async function getInitialData() {
 	await getAssets();
 	await getOrderbooks();
 	await getLatestCandles();
+	await getMarkPrices();
 	await getDetailedUsersState();
 	await getSpotPrices();
+	streamMarkPrices();
 	streamSpotPrices();
 	//   orderbooks = new Map<Asset["id"], OrderBook>(orderbookEntities);
 
@@ -274,6 +287,4 @@ async function getInitialData() {
 	// getting positions
 }
 
-(async ()=>{
-	await getInitialData();
-})()
+await getInitialData();

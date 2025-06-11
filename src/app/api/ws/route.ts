@@ -3,7 +3,6 @@ import { WebSocket, WebSocketServer } from "ws";
 import { User } from "@/generated/prisma";
 import { socketSessionWrapper } from "./socketSessionWrapper";
 import {
-	getSubscribeMessageValidation,
 	getWsMessageValidation,
 } from "@/lib/backend/validations/wsValidations";
 import { ZodError } from "zod";

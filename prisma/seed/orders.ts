@@ -1,5 +1,4 @@
 // creating orders
-import { fetchHttpSpotPrice } from "@/lib/backend/spotFetcher";
 import { assets } from "./asset";
 import { users } from "./user";
 import { Asset, Order, Order_Status, Order_Type, PrismaPromise, Side, User } from "@/generated/prisma";
@@ -7,6 +6,7 @@ import config_data from "../../config.json";
 import seedrandom from 'seedrandom'
 import prisma from "./prismaClient";
 import {v4 as uuid} from "uuid";
+import { fetchHttpSpotPrice } from "./utils";
 
 async function generateOrders(orderCount: number){
 
@@ -79,7 +79,7 @@ async function generateOrders(orderCount: number){
 }
 
 export async function fillOrders(seedingQueries: Array<()=>PrismaPromise<any>>){
-    const orders = await generateOrders(30);
+    const orders = await generateOrders(300);
     seedingQueries.push(()=>prisma.order.createMany({
         data: orders,
     }));

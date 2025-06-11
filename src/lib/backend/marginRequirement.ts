@@ -2,7 +2,6 @@ import { Order, Order_Type, Side } from "@/generated/prisma";
 import { orderbooks } from "./store";
 import { OrderBook } from "./types";
 import { calculateMarginWithFee } from "./utils";
-import { OrderWithRequiredPrice } from "./types";
 import config from "../../../config.json"
 import { AppError, ErrorType } from "../common/error";
 
