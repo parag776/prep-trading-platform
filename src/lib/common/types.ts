@@ -1,11 +1,12 @@
 import { Asset, Order, Order_Type, Position, Resolution, Side, Trade, User } from "@/generated/prisma";
 
+export type Prettify<T> = {
+	[K in keyof T]: T[K];
+} & {};
+
 export type ResolutionInfo = Map<Resolution, { symbol: string; duration: number }>;
 
-type _OrderWithRequiredPrice = Omit<Order, "price"> & { price: number };
-export type OrderWithRequiredPrice = {
-	[K in keyof _OrderWithRequiredPrice]: _OrderWithRequiredPrice[K];
-};
+export type OrderWithRequiredPrice = Prettify<Omit<Order, "price"> & { price: number }>;
 
 export type TradeLite = {
 	id: Trade["id"];
@@ -39,7 +40,7 @@ export type CancelOrder = {
 	orderId: Order["id"];
 };
 
-export type placeOrder = {
+export type PlaceOrder = {
 	type: Order_Type;
 	side: Side;
 	assetId: Asset["id"];
@@ -87,14 +88,6 @@ export type SubscriptionMessageWithUserId =
 
 // response types
 
-export type ResponseMessageMap = {
-	orderbook: OrderbookDiffResponse;
-	tradebook: TradeResponse;
-	openOrders: OrderDiffResponse;
-	positions: PositionDiffResponse;
-	accountMetrics: AccountMetricsResponse;
-};
-
 export type AccountMetricsResponse = {
 	channel: "accountMetrics";
 	orderMargin: number;
@@ -112,9 +105,9 @@ export type OrderbookDiffResponse = {
 	changeInQuantity: number;
 };
 
-export type OrderDiffResponse = Order & { channel: "openOrders" };
+export type OrderDiffResponse = Prettify<Order & { channel: "openOrders" }>;
 
-export type PositionDiffResponse = Position & { channel: "positions" };
+export type PositionDiffResponse = Prettify<Position & { channel: "positions" }>;
 
 export type TradeResponse = {
 	channel: "tradebook";
@@ -128,37 +121,51 @@ export type TradeResponse = {
 export type OrderMessage = {
 	type: "order";
 	action: "place" | "cancel";
-	payload: CancelOrder | placeOrder;
+	payload: CancelOrder | PlaceOrder;
 };
 
-export type _WsResponse = {
-	[K in ChannelsWithRequiredAsset]: {
-		channel: K;
-		assetId: Asset["id"];
-		message: Array<ResponseMessageMap[K]>;
-	};
-} & {
-	[K in ChannelsWithOptionalAsset]: {
-		channel: K;
-		assetId?: Asset["id"];
-		message: Array<ResponseMessageMap[K]>;
-	};
-} & {
-	[K in ChannelsWithoutAsset]: {
-		channel: K;
-		message: ResponseMessageMap[K];
-	};
+export type SubscriptionMap = Prettify<
+	{
+		[K in ChannelsWithRequiredAsset]: {
+			channel: K;
+			assetId: Asset["id"];
+		};
+	} & {
+		[K in ChannelsWithOptionalAsset]: {
+			channel: K;
+			assetId?: Asset["id"];
+		};
+	} & {
+		[K in ChannelsWithoutAsset]: {
+			channel: K;
+		};
+	}
+>;
+
+export type ResponseMessageMap = {
+	orderbook: Array<OrderbookDiffResponse>;
+	tradebook: Array<TradeResponse>;
+	openOrders: Array<OrderDiffResponse>;
+	positions: Array<PositionDiffResponse>;
+	accountMetrics: AccountMetricsResponse;
 };
 
-export type WsResponse = {
-	[K in keyof _WsResponse]: _WsResponse[K];
+type status = "error" | "loading" | "ready";
+
+export type Ready<T> = {status: "ready", data: T};
+export type Loading = {status: "loading"};
+export type Err<T extends Error> = {status: "error", error: T};
+
+export type Loadable<T> = Ready<T> | Loading;
+export type LoadableWithError<T, E extends Error> = Ready<T> | Loading | Err<E>;
+export type Subscription = {
+	[K in keyof SubscriptionMap]: SubscriptionMap[K];
 }[Channel];
-// export type WsResponse<P extends Channel = Channel> = {
-// 	[K in P]: {
-// 		assetId: string;
-// 		channel: K;
-// 		message: Array<ResponseMessageMap[K]>;
-// 	};
-// }[P];
 
-export type WsMessage = SubscriptionMessage | placeOrder;
+export type WsResponse = Prettify<
+	{
+		[K in Channel]: SubscriptionMap[K] & { message: ResponseMessageMap[K] };
+	}[Channel]
+>;
+
+export type WsMessage = SubscriptionMessage | PlaceOrder;

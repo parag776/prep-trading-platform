@@ -287,4 +287,9 @@ async function getInitialData() {
 	// getting positions
 }
 
-await getInitialData();
+async function main(){
+	await getInitialData();
+}
+
+await main();
+

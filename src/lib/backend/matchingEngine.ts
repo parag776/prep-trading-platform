@@ -8,7 +8,7 @@ import { OrderBook } from "./types";
 import prisma, { addOrderToDB, addPositionToDB, appendUserBalanceInDB, deletePositionFromDB, updateLatestCandleToDB, updateOrderInDB, updatePositionInDB } from "./database";
 import { v4 as uuid } from "uuid";
 import { resolutionInfo } from "../common/data";
-import { databaseActions } from "./manager";
+import { databaseActions } from "./exchangeController";
 import { addAccountMetricResponse, addOrderDiffResponse, addOrderbookDiffResponse, addPositionResponse, addTradeResponse } from "./webSockets/utils";
 import { OrderWithRequiredPrice } from "../common/types";
 

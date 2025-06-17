@@ -20,8 +20,14 @@ export function streamSpotPrices() {
 		return stream.slice(0, symbolLen - 4).toUpperCase();
 	}
 
+	let attempts = 0;
 	function connect() {
 		const ws = new WebSocket(fullUrl);
+
+		ws.on("open", ()=>{
+			attempts = 0;
+		})
+
 		ws.on("message", (data) => {
 			try {
 				const dataObj = JSON.parse(data.toString());
@@ -34,8 +40,9 @@ export function streamSpotPrices() {
 		});
 
 		ws.on("close", () => {
+			attempts++;
 			console.log("WebSocket for fetching stock prices closed. Reconnecting...");
-			setTimeout(connect, 1000); // Wait 1s before reconnect
+			setTimeout(connect, Math.random()*Math.min(30000, Math.pow(2, attempts) * 100)); // exponential backoff
 		});
 
 		ws.on("error", (err) => {

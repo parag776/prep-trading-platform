@@ -157,3 +157,10 @@ export function calculateUserPnl(user: UserWithPositionsAndOpenOrders) {
 	}
 	return pnl;
 }
+
+export function fixedGapSetInterval(cb: ()=>Promise<void> | void, ms: number){
+	setTimeout(async ()=>{
+		await cb();
+		fixedGapSetInterval(cb, ms);
+	}, ms)
+}

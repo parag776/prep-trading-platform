@@ -1,8 +1,10 @@
-import { PositionDiffResponse, PositionWithContractPrice } from "@/lib/common/types";
-import { Position, Side } from "@/generated/prisma";
+import { PositionDiffResponse } from "@/lib/common/types";
+import { Position } from "@/generated/prisma";
 
-export function getUpdatedPositions(positions: Array<PositionWithContractPrice>, updates: Array<PositionDiffResponse> = []): Array<PositionWithContractPrice> {
-	const positionMap = new Map<Position["id"], PositionWithContractPrice>();
+
+
+export function getUpdatedPositions(positions: Array<Position>, updates: Array<PositionDiffResponse> = []) {
+	const positionMap = new Map<Position["id"], Position>();
 	for (const position of positions) {
 		positionMap.set(position.id, position);
 	}

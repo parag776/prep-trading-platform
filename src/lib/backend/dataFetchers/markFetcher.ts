@@ -20,14 +20,19 @@ export function streamMarkPrices() {
 		return stream.slice(0, symbolLen - 4).toUpperCase();
 	}
 
+	let attempts = 0;
 	function connect() {
 		const ws = new WebSocket(fullUrl);
+
+		ws.on("open", () => {
+			attempts = 0;
+		});
 		ws.on("message", (data) => {
 			try {
 				const dataObj = JSON.parse(data.toString());
 				let symbol = getSymbolFromStream(dataObj.stream);
 				const assetId = symbolToAssetId.get(symbol)!;
-                console.log(Number(dataObj.data.p))
+				console.log(Number(dataObj.data.p));
 				markPrices.set(assetId, Number(dataObj.data.p));
 			} catch (err) {
 				console.error("Error parsing data for fetching mark prices:", err);
@@ -35,8 +40,9 @@ export function streamMarkPrices() {
 		});
 
 		ws.on("close", () => {
+			attempts++;
 			console.log("WebSocket for fetching mark prices closed. Reconnecting...");
-			setTimeout(connect, 1000); // Wait 1s before reconnect
+			setTimeout(connect, Math.random()*Math.min(30000, Math.pow(2, attempts) * 100)); // exponential backoff
 		});
 
 		ws.on("error", (err) => {
@@ -55,4 +61,4 @@ export async function fetchHttpMarkPrice(asset: Asset): Promise<number> {
 	return Number(response.data.price);
 }
 
-streamMarkPrices()
+streamMarkPrices();

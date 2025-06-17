@@ -1,7 +1,7 @@
 import { TradeLite, TradeResponse } from "@/lib/common/types";
 import configData from "../../../../config.json"
 
-export interface TradeBook{
+export type TradeBook = {
     maxTradeBookSize: number,
     trades: Array<TradeLite>
 }
@@ -15,10 +15,10 @@ export function createTradebook(maxTradeBookSize: number = configData.trade_book
 
 // function without a sideEffect.
 // i should create all react functions without sideEffects.
-export function getUpdatedTradebook(tradebook: TradeBook, trades: TradeResponse[]){
+export function getUpdatedTradebook(tradebook: TradeBook, updates: TradeResponse[]){
 
     const updatedTradebook = {...tradebook};
-    for(const trade of trades){
+    for(const trade of updates){
         if(updatedTradebook.trades.length===0){
             updatedTradebook.trades.push(trade);
             continue;
