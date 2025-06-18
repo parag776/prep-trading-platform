@@ -1,21 +1,9 @@
-import {
-	Candle,
-	extendedUser,
-	HalfOrderBook,
-	LatestCandleByAssetAndResolution,
-	OrderBook,
-	UserWithPositionsAndOpenOrders,
-} from "./types";
+import { Candle, extendedUser, HalfOrderBook, LatestCandleByAssetAndResolution, OrderBook, UserWithPositionsAndOpenOrders } from "./types";
 import { Asset, PrismaClient, Side, Resolution, User, Order_Status, Position } from "../../generated/prisma";
 import { OrderWithRequiredPrice } from "../common/types";
 import createRBTree from "functional-red-black-tree";
 import config from "../../../config.json";
-import {
-	calculateMaintenanceMargin,
-	calculateMarginWithoutFee,
-	calculateMarginWithFee,
-	getContractPrice,
-} from "./utils";
+import { calculateMaintenanceMargin, calculateMarginWithoutFee, calculateMarginWithFee, getContractPrice } from "./utils";
 import { streamSpotPrices } from "./dataFetchers/spotFetcher";
 import axios from "axios";
 import { streamMarkPrices } from "./dataFetchers/markFetcher";
@@ -40,9 +28,7 @@ async function getSpotPrices() {
 		spotPrices = new Map(
 			await Promise.all(
 				assets.map(async (asset) => {
-					const res = await axios.get(
-						`https://api4.binance.com/api/v3/ticker/price?symbol=${asset.symbol}USDC`
-					);
+					const res = await axios.get(`https://api4.binance.com/api/v3/ticker/price?symbol=${asset.symbol}USDC`);
 					return [asset.id, Number(res.data.price)] as [Asset["id"], number];
 				})
 			)
@@ -65,44 +51,40 @@ async function getOrderbooks() {
 					},
 				})) as OrderWithRequiredPrice[];
 
-				let askOrders = createRBTree<OrderWithRequiredPrice, null>(
-					(key1: OrderWithRequiredPrice, key2: OrderWithRequiredPrice) => {
-						if (key1.price === key2.price) {
-							if (key1.createdAt < key2.createdAt) {
-								return -1;
-							} else if (key1.createdAt > key2.createdAt) {
-								return 1;
-							} else {
-								return 0;
-							}
-						}
-						if (key1.price < key2.price) {
+				let askOrders = createRBTree<OrderWithRequiredPrice, null>((key1: OrderWithRequiredPrice, key2: OrderWithRequiredPrice) => {
+					if (key1.price === key2.price) {
+						if (key1.createdAt < key2.createdAt) {
 							return -1;
-						} else {
+						} else if (key1.createdAt > key2.createdAt) {
 							return 1;
+						} else {
+							return 0;
 						}
 					}
-				);
+					if (key1.price < key2.price) {
+						return -1;
+					} else {
+						return 1;
+					}
+				});
 
-				let bidOrders = createRBTree<OrderWithRequiredPrice, null>(
-					(key1: OrderWithRequiredPrice, key2: OrderWithRequiredPrice) => {
-						if (key1.price === key2.price) {
-							if (key1.createdAt < key2.createdAt) {
-								return -1;
-							} else if (key1.createdAt > key2.createdAt) {
-								return 1;
-							} else {
-								return 0;
-							}
-						}
-						if (key1.price > key2.price) {
-							// only difference in ask and bid is the comparison operator.
+				let bidOrders = createRBTree<OrderWithRequiredPrice, null>((key1: OrderWithRequiredPrice, key2: OrderWithRequiredPrice) => {
+					if (key1.price === key2.price) {
+						if (key1.createdAt < key2.createdAt) {
 							return -1;
-						} else {
+						} else if (key1.createdAt > key2.createdAt) {
 							return 1;
+						} else {
+							return 0;
 						}
 					}
-				);
+					if (key1.price > key2.price) {
+						// only difference in ask and bid is the comparison operator.
+						return -1;
+					} else {
+						return 1;
+					}
+				});
 
 				for (let order of orders) {
 					if (order.side === Side.ASK) {
@@ -173,9 +155,7 @@ async function getMarkPrices() {
 		markPrices = new Map(
 			await Promise.all(
 				assets.map(async (asset) => {
-					const res = await axios.get(
-						`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${asset.symbol}USDC`
-					);
+					const res = await axios.get(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${asset.symbol}USDC`);
 					return [asset.id, Number(res.data.markPrice)] as [Asset["id"], number];
 				})
 			)
@@ -183,11 +163,7 @@ async function getMarkPrices() {
 	} catch (e) {
 		markPrices = new Map(
 			assets.map((asset) => {
-				return [
-					asset.id,
-					latestCandles.get({ assetId: asset.id, resolution: Resolution.ONE_MINUTE })!
-						.close,
-				] as [Asset["id"], number];
+				return [asset.id, latestCandles.get({ assetId: asset.id, resolution: Resolution.ONE_MINUTE })!.close] as [Asset["id"], number];
 			})
 		);
 	}
@@ -217,21 +193,14 @@ async function getDetailedUsersState() {
 		const detailedUserState: UserWithPositionsAndOpenOrders = {
 			...user,
 			maintenanceMargin: 0,
-			InitialMargin: 0,
+			initialMargin: 0,
 			orderMargin: 0,
 			positions: new Map<Asset["id"], Position>(),
 			orders: new Map<OrderWithRequiredPrice["id"], OrderWithRequiredPrice>(),
 		};
 		for (let position of user.positions) {
-			detailedUserState.InitialMargin += calculateMarginWithoutFee(
-				position.average_price,
-				position.quantity,
-				position.leverage
-			); // initial margin
-			detailedUserState.maintenanceMargin += calculateMaintenanceMargin(
-				position.average_price,
-				position.quantity
-			);
+			detailedUserState.initialMargin += calculateMarginWithoutFee(position.average_price, position.quantity, position.leverage); // initial margin
+			detailedUserState.maintenanceMargin += calculateMaintenanceMargin(position.average_price, position.quantity);
 			detailedUserState.positions.set(position.assetId, position);
 		}
 		detailedUsersState.set(user.id, detailedUserState);
@@ -250,12 +219,7 @@ async function getDetailedUsersState() {
 		// since its order margin you should block fees also, bro you almost forgot it and could have included
 		// potentially a hazardous bug in your system.
 		// this bug would have been so dangerous that, you could never have figured it out.
-		extendedUser.orderMargin += calculateMarginWithFee(
-			remainingQuantity,
-			order.price!,
-			order.leverage,
-			config.maker_fee
-		);
+		extendedUser.orderMargin += calculateMarginWithFee(remainingQuantity, order.price!, order.leverage, config.maker_fee);
 
 		extendedUser.orders.set(order.id, order);
 	};
@@ -287,9 +251,8 @@ async function getInitialData() {
 	// getting positions
 }
 
-async function main(){
+async function main() {
 	await getInitialData();
 }
 
 await main();
-

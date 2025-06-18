@@ -71,7 +71,7 @@ async function liquidateUser(user: UserWithPositionsAndOpenOrders) {
 		// adding this at the end because ultimately whatever happens, however user's account metric changes, his ultimate metric at the end should be this.
 		user.usdc = 0;
 		user.orderMargin = 0;
-		user.InitialMargin = 0;
+		user.initialMargin = 0;
 		user.maintenanceMargin = 0;
 		user.funding_unpaid = 0;
 		addAccountMetricResponse(user);
@@ -79,20 +79,20 @@ async function liquidateUser(user: UserWithPositionsAndOpenOrders) {
 	});
 }
 
-export async function checkLiquidation(detailedUsersState: Map<User["id"], UserWithPositionsAndOpenOrders>){
-    for(const [userId, user] of detailedUsersState){
-        let pnl = 0;
-        for(const [positionId, position] of user.positions){
-            const markPrice = getMarkPrice(position.assetId);
-            let profit = (markPrice-position.average_price)*position.quantity;
-            if(position.side === Side.ASK){
-                profit =  -profit;
-            }
-            pnl+=profit;
-        }
-        const accountEquity = user.usdc+pnl-user.funding_unpaid;
-        if(accountEquity<user.maintenanceMargin){
-            await liquidateUser(user)
-        }
-    }
+export async function checkLiquidation(detailedUsersState: Map<User["id"], UserWithPositionsAndOpenOrders>) {
+	for (const [userId, user] of detailedUsersState) {
+		let pnl = 0;
+		for (const [positionId, position] of user.positions) {
+			const markPrice = getMarkPrice(position.assetId);
+			let profit = (markPrice - position.average_price) * position.quantity;
+			if (position.side === Side.ASK) {
+				profit = -profit;
+			}
+			pnl += profit;
+		}
+		const accountEquity = user.usdc + pnl - user.funding_unpaid;
+		if (accountEquity < user.maintenanceMargin) {
+			await liquidateUser(user);
+		}
+	}
 }

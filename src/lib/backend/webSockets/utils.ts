@@ -24,7 +24,6 @@ import {
 	WsResponse,
 } from "@/lib/common/types";
 import WebSocket from "ws";
-import { getContractPrice } from "../utils";
 import { UserWithPositionsAndOpenOrders } from "../types";
 
 // assetid can be all here.. for openOrders and positions.
@@ -238,14 +237,14 @@ export function addTradeResponse(trade: Trade) {
 }
 
 export function addAccountMetricResponse(user: UserWithPositionsAndOpenOrders) {
-
 	const accountMetric: AccountMetricsResponse = {
 		channel: "accountMetrics",
+		usdc: user.usdc,
 		orderMargin: user.orderMargin,
-		initialMargin: user.InitialMargin,
+		initialMargin: user.initialMargin,
 		maintenanceMargin: user.maintenanceMargin,
-		unpaidFunding: user.funding_unpaid
-	}
+		unpaidFunding: user.funding_unpaid,
+	};
 	accountMetricsResponses.set(user.id, accountMetric);
 }
 

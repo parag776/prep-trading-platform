@@ -88,13 +88,19 @@ export type SubscriptionMessageWithUserId =
 
 // response types
 
-export type AccountMetricsResponse = {
-	channel: "accountMetrics";
+export type AccountMetrics = {
+	usdc: number;
 	orderMargin: number;
 	initialMargin: number;
 	maintenanceMargin: number;
 	unpaidFunding: number;
 };
+
+export type AccountMetricsResponse = Prettify<
+	AccountMetrics & {
+		channel: "accountMetrics";
+	}
+>;
 
 export type OrderbookDiffResponse = {
 	channel: "orderbook";
@@ -152,9 +158,9 @@ export type ResponseMessageMap = {
 
 type status = "error" | "loading" | "ready";
 
-export type Ready<T> = {status: "ready", data: T};
-export type Loading = {status: "loading"};
-export type Err<T extends Error> = {status: "error", error: T};
+export type Ready<T> = { status: "ready"; data: T };
+export type Loading = { status: "loading" };
+export type Err<T extends Error> = { status: "error"; error: T };
 
 export type Loadable<T> = Ready<T> | Loading;
 export type LoadableWithError<T, E extends Error> = Ready<T> | Loading | Err<E>;

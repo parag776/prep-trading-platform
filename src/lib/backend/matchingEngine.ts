@@ -176,7 +176,7 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 	// case where position did not exist already.
 	if (!position) {
 		user.maintenanceMargin += calculateMaintenanceMargin(price, quantity);
-		user.InitialMargin += calculateMarginWithoutFee(quantity, price, leverage);
+		user.initialMargin += calculateMarginWithoutFee(quantity, price, leverage);
 		addAccountMetricResponse(user);
 
 		const newPosition: Position = {
@@ -202,7 +202,7 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 
 	// case where we are just adding to the position.
 	if (position.side === side) {
-		user.InitialMargin += calculateMarginWithoutFee(quantity, price, leverage);
+		user.initialMargin += calculateMarginWithoutFee(quantity, price, leverage);
 		user.maintenanceMargin += calculateMaintenanceMargin(price, quantity);
 
 		const new_quantity = position.quantity + quantity;
@@ -221,7 +221,7 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 	// remaining cases are only those where position is being made to the opposite direction.
 	if (position.quantity > quantity) {
 		// reducing earlier margin that was already added.
-		user.InitialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
+		user.initialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
 		user.maintenanceMargin -= calculateMaintenanceMargin(quantity, position.average_price);
 
 		// adding profit
@@ -238,7 +238,7 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 		addAccountMetricResponse(user);
 	} else if (position.quantity === quantity) {
 		// reducing earlier margin that was already added.
-		user.InitialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
+		user.initialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
 		user.maintenanceMargin -= calculateMaintenanceMargin(quantity, position.average_price);
 
 		// adding profit
@@ -261,11 +261,11 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 		const oppositeQuantity = quantity - position.quantity;
 
 		// first removing initial margin
-		user.InitialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
+		user.initialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
 		user.maintenanceMargin -= calculateMaintenanceMargin(quantity, position.average_price);
 
 		// then adding the margin created by opposite position.
-		user.InitialMargin += calculateMarginWithoutFee(quantity, price, leverage);
+		user.initialMargin += calculateMarginWithoutFee(quantity, price, leverage);
 		user.maintenanceMargin += calculateMaintenanceMargin(quantity, price);
 
 		// adding profit for the position that is closed,
@@ -292,7 +292,7 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 
 	if (!isLiquidation) {
 		const accountEquity = user.usdc - user.funding_unpaid + calculateUserPnl(user);
-		const availableMargin = accountEquity - user.InitialMargin - user.orderMargin;
+		const availableMargin = accountEquity - user.initialMargin - user.orderMargin;
 		if (availableMargin < marginRequired) {
 			throw new AppError(ErrorType.InsufficientMarginError, `${user.name} with user id ${user.id} doesn't have enough margin for the trade.`, 422);
 		}

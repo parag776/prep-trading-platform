@@ -2,34 +2,29 @@ import { Asset } from "@/generated/prisma";
 import { useEffect, useRef, useState } from "react";
 import { Loadable, TradeLite, TradeResponse, WsResponse } from "@/lib/common/types";
 import axios from "axios";
-import { create } from "zustand";
+import { StateCreator } from "zustand";
 import { addSubscriber, removeSubscriber, Subscriber, useSocketSubscribe } from "./socket";
 import { getUpdatedTradebook, TradeBook } from "../utils/tradebook";
 import configData from "../../../../config.json";
+import { useStore } from "./store";
+import { Store, TradebookSlice } from "./types";
 
-export type TradebookStore = {
-	tradebook: TradeBook | null;
-	ltp: number | null;
-	fetchTradebook: (asset: Asset) => Promise<void>;
-	updateTradebook: (updates: Array<TradeResponse>) => void;
-};
-
-const useTradebookStore = create<TradebookStore>((set) => ({
+export const createTradebookSlice: StateCreator<Store, [], [], TradebookSlice> = (set) => ({
 	tradebook: null,
 	ltp: null,
 	fetchTradebook: async (asset: Asset) => {
-        try{
-            const data: Array<TradeLite> = (await axios.get(`/api/trade_history?symbol=${asset.symbol}&limit=${configData.trade_book_size}`)).data;
-            set(() => ({
-                tradebook: {
-                    maxTradeBookSize: configData.trade_book_size,
-                    trades: data,
-                },
-                ltp: data[0].price,
-            }));
-        } catch(e){
-            throw new Error("tradebook fetching went wrong.")
-        }
+		try {
+			const data: Array<TradeLite> = (await axios.get(`/api/trade_history?symbol=${asset.symbol}&limit=${configData.trade_book_size}`)).data;
+			set(() => ({
+				tradebook: {
+					maxTradeBookSize: configData.trade_book_size,
+					trades: data,
+				},
+				ltp: data[0].price,
+			}));
+		} catch (e) {
+			throw new Error("Tradebook fetching went wrong: " + (e instanceof Error ? e.message : String(e)));
+		}
 	},
 	updateTradebook: (updates: Array<TradeResponse>) => {
 		set((state) => {
@@ -41,13 +36,13 @@ const useTradebookStore = create<TradebookStore>((set) => ({
 			}
 		});
 	},
-}));
+});
 
-const useInitializeTradebook = (asset: Asset): "error" | "ready"=> {
-    const [status, setStatus] = useState<"error" | "ready">("ready");
+const useInitializeTradebook = (asset: Asset): "error" | "ready" => {
+	const [status, setStatus] = useState<"error" | "ready">("ready");
 
-	const fetchTradebook = useTradebookStore((state) => state.fetchTradebook);
-	const updateTradebook = useTradebookStore((state) => state.updateTradebook);
+	const fetchTradebook = useStore((state) => state.fetchTradebook);
+	const updateTradebook = useStore((state) => state.updateTradebook);
 
 	const subscriber: Subscriber = {
 		channel: "tradebook",
@@ -78,7 +73,7 @@ const useInitializeTradebook = (asset: Asset): "error" | "ready"=> {
 };
 
 const useTradebook = (): Loadable<TradeBook> => {
-    const tradebook = useTradebookStore((state) => state.tradebook);
-    if(tradebook) return {status: "ready", data: tradebook};
-    return {status: "loading"};
+	const tradebook = useStore((state) => state.tradebook);
+	if (tradebook) return { status: "ready", data: tradebook };
+	return { status: "loading" };
 };
