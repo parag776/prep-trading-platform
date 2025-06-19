@@ -1,29 +1,8 @@
 import { Asset } from "@/generated/prisma";
-import { Loadable, PositionDiffResponse } from "@/lib/common/types";
+import { PositionDiffResponse } from "@/lib/common/types";
 import axios from "axios";
 import {  StateCreator } from "zustand";
 import { MarkPriceSlice, Store } from "./types";
-import { useStore } from "./store";
-
-// export type MarkPriceSlice = {
-// 	markPrices: Map<Asset["id"], number> | null;
-// 	updateMarkPrice: (asset: Asset, price: number) => void;
-// 	removeMarkPrice: (asset: Asset) => void;
-// 	subscribeToMarkPrice: (asset: Asset) => void;
-// 	unsubscribeToMarkPrice: (asset: Asset) => void;
-// };
-
-const fetchMarkPrice = async (assetId: string) => {
-	try {
-		const res = await axios.get(`https://fapi.binance.com/fapi/v1/premiumIndex`, {
-			params: { symbol: assetId + "USDC" },
-		});
-
-		return parseFloat(res.data.markPrice); // markPrice is a string
-	} catch (err) {
-		throw new Error("Failed to fetch mark price: " + (err instanceof Error ? err.message : String(err)));
-	}
-};
 
 const markPriceConnections = new Map<Asset["id"], WebSocket>();
 
@@ -126,16 +105,3 @@ export const createMarkPriceSlice: StateCreator<Store, [], [], MarkPriceSlice> =
 		}
 	},
 });
-
-export function useMarkPrice(asset: Asset): Loadable<number> {
-	const markPrice = useStore((state) => state.markPrices?.get(asset.id));
-	if (markPrice) return { status: "ready", data: markPrice };
-	return { status: "loading" };
-}
-
-export function useMarkPrices(): Loadable<Map<Asset["id"], number>> {
-	const markPrices = useStore((state)=> state.markPrices);
-	if(markPrices) return {status: "ready", data: markPrices};
-	return {status: "loading"};
-	
-}

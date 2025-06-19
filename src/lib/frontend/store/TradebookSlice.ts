@@ -1,12 +1,9 @@
 import { Asset } from "@/generated/prisma";
-import { useEffect, useRef, useState } from "react";
-import { Loadable, TradeLite, TradeResponse, WsResponse } from "@/lib/common/types";
+import { TradeLite, TradeResponse} from "@/lib/common/types";
 import axios from "axios";
 import { StateCreator } from "zustand";
-import { addSubscriber, removeSubscriber, Subscriber, useSocketSubscribe } from "./socket";
-import { getUpdatedTradebook, TradeBook } from "../utils/tradebook";
+import { getUpdatedTradebook } from "../utils/tradebook";
 import configData from "../../../../config.json";
-import { useStore } from "./store";
 import { Store, TradebookSlice } from "./types";
 
 export const createTradebookSlice: StateCreator<Store, [], [], TradebookSlice> = (set) => ({
@@ -38,42 +35,3 @@ export const createTradebookSlice: StateCreator<Store, [], [], TradebookSlice> =
 	},
 });
 
-const useInitializeTradebook = (asset: Asset): "error" | "ready" => {
-	const [status, setStatus] = useState<"error" | "ready">("ready");
-
-	const fetchTradebook = useStore((state) => state.fetchTradebook);
-	const updateTradebook = useStore((state) => state.updateTradebook);
-
-	const subscriber: Subscriber = {
-		channel: "tradebook",
-		assetId: asset.id,
-		callback: (response: WsResponse) => {
-			if (response.channel === "tradebook") {
-				updateTradebook(response.message);
-			}
-		},
-	};
-
-	const initializeTradebook = async () => {
-		try {
-			addSubscriber(subscriber);
-			await fetchTradebook(asset);
-		} catch (e) {
-			console.error(e);
-			setStatus("error");
-		}
-	};
-
-	useEffect(() => {
-		initializeTradebook();
-		return () => removeSubscriber(subscriber);
-	}, [asset.id]);
-
-	return status;
-};
-
-const useTradebook = (): Loadable<TradeBook> => {
-	const tradebook = useStore((state) => state.tradebook);
-	if (tradebook) return { status: "ready", data: tradebook };
-	return { status: "loading" };
-};

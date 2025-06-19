@@ -1,6 +1,4 @@
-import { Asset, Order, Position } from "@/generated/prisma";
-import { TradeBook } from "../utils/tradebook";
-import { AccountMetrics, AccountMetricsResponse, OrderbookDiffResponse, OrderBookLite, OrderDiffResponse, OrderWithRequiredPrice, PositionDiffResponse, Prettify, TradeResponse } from "@/lib/common/types";
+
 import { create } from "zustand";
 import { createTradebookSlice } from "./TradebookSlice";
 import { createPositionsSlice } from "./positionsSlice";

@@ -1,10 +1,7 @@
 import { Asset } from "@/generated/prisma";
-import { Loadable } from "@/lib/common/types";
 import axios from "axios";
-import { useEffect, useState } from "react";
 import { StateCreator } from "zustand";
 import { AssetSlice, Store } from "./types";
-import { useStore } from "./store";
 
 export const createAssetSlice: StateCreator<Store, [], [], AssetSlice> = (set, get) => ({
 	assetMap: null,
@@ -37,42 +34,3 @@ export const createAssetSlice: StateCreator<Store, [], [], AssetSlice> = (set, g
 		return assets?.find((asset)=>asset.symbol===symbol) ?? null;
 	},
 });
-
-
-export const useAsset = (): Loadable<Asset> => {
-	const asset = useStore((state) => state.currentAsset);
-	if (asset) return { status: "ready", data: asset };
-	return { status: "loading" };
-};
-
-export const useUpdateAsset = (): AssetSlice["updateCurrentAsset"] => {
-	const updateAsset = useStore((state) => state.updateCurrentAsset);
-	return updateAsset;
-};
-
-export const useAllAssets = (): Loadable<Array<Asset>> => {
-	const assetMap = useStore((state) => state.assetMap);
-	if (assetMap) {
-		return { status: "ready", data: Array.from(assetMap.values()) };
-	} else {
-		return { status: "loading" };
-	}
-};
-
-export const useFetchAllAssets = (): "error" | "ready" => {
-	const [status, setStatus] = useState<"error" | "ready">("ready");
-	const fetchAllAssets = useStore((s) => s.fetchAllAssets);
-
-	useEffect(() => {
-		(async () => {
-			try {
-				await fetchAllAssets();
-			} catch (e) {
-				console.error(e);
-				setStatus("error");
-			}
-		})();
-	}, []);
-
-	return status;
-};
