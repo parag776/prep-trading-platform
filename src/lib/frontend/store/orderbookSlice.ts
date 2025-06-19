@@ -7,6 +7,7 @@ import { addSubscriber, removeSubscriber, Subscriber, useSocketSubscribe } from 
 import { getUpdatedOrderbook } from "../utils/orderbook";
 import { useStore } from "./store";
 import { OrderbookSlice, Store } from "./types";
+import { getDecimalPrecision } from "../utils/misc";
 
 
 
@@ -71,3 +72,7 @@ const useOrderbook = (): Loadable<OrderBookLite> => {
 	if (orderbook) return { status: "ready", data: orderbook };
 	return { status: "loading" };
 };
+
+const useDecimalPoints = ()=>{
+  useStore((state) => getDecimalPrecision(state.orderbook));
+}
