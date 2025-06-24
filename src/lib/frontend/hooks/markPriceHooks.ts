@@ -10,6 +10,7 @@ export function useMarkPrice(asset: Asset): Loadable<number> {
 
 export function useMarkPrices(): Loadable<Map<Asset["id"], number>> {
 	const markPrices = useStore((state)=> state.markPrices);
+
 	if(markPrices) return {status: "ready", data: markPrices};
 	return {status: "loading"};
 	

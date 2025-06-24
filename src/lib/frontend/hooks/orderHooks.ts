@@ -1,12 +1,12 @@
 import { Order } from "@/generated/prisma";
-import { Loadable, OrderWithRequiredPrice, WsResponse } from "@/lib/common/types";
+import { Loadable, LoadStatus, OrderWithRequiredPrice, WsResponse } from "@/lib/common/types";
 import { useEffect, useState } from "react";
 import { addSubscriber, removeSubscriber, Subscriber } from "../store/socket";
 import { useStore } from "../store/store";
 
 
-export const useInitializePositions = (): "error" | "ready" => {
-	const [status, setStatus] = useState<"error" | "ready">("ready");
+export const useInitializePositions = (): LoadStatus => {
+	const [status, setStatus] = useState<LoadStatus>("loading");
 
 	const fetchOrders = useStore((state) => state.fetchOrders);
 	const updateOrders = useStore((state) => state.updateOrders);
@@ -22,8 +22,9 @@ export const useInitializePositions = (): "error" | "ready" => {
 
 	const initializePositions = async () => {
 		try {
-			addSubscriber(subscriber);
 			await fetchOrders();
+			addSubscriber(subscriber);
+			setStatus("ready")
 		} catch (e) {
 			console.error(e);
 			setStatus("error");

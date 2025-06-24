@@ -45,6 +45,7 @@ export const createMarkPriceSlice: StateCreator<Store, [], [], MarkPriceSlice> =
 			} else {
 				throw new Error("please fetch positions before fetching markprices.");
 			}
+
 		} catch (e) {
 			throw new Error("Error fetching markPrices: " + (e instanceof Error ? e.message : String(e)));
 		}

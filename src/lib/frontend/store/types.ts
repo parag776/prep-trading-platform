@@ -20,6 +20,7 @@ export type OrderSlice = {
     orderHistory: Array<Order> | null;
     updateOrders: (updates: Array<OrderDiffResponse>) => void;
     fetchOrders: () => Promise<void>;
+    getDecimalPrecision: ()=>DecimalPrecision
 };
 
 export type OrderbookSlice = {
@@ -34,7 +35,7 @@ export type MarkPriceSlice = {
 	removeMarkPrice: (asset: Asset) => void;
 	subscribeToMarkPrice: (asset: Asset) => void;
 	unsubscribeToMarkPrice: (asset: Asset) => void;
-    fetchMarkPrices: (asset: Asset) => void;
+    fetchMarkPrices: () => Promise<void>;
     syncMarkPriceConnectionsWithPositionUpdates: (updates: Array<PositionDiffResponse>) => void;
 };
 
@@ -51,7 +52,15 @@ export type AccountMetricsSlice = Prettify<{accountMetrics: AccountMetrics | nul
     accountMetrics: null | AccountMetrics,
     fetchAccountMetrics: () => Promise<void>
     updateAccountMetrics: (update: AccountMetricsResponse) => void;
+    addToBalance: (amount: number) => void;
+    deposit: (amount: number) => Promise<void>;
+    withdraw: (amount: number) => Promise<void>;
 }>
+
+export type DecimalPrecision = {
+    price: number;
+    quantity: number;
+}
 
 export type Store = Prettify<
   TradebookSlice &

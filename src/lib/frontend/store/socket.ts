@@ -10,15 +10,26 @@ let socket: WebSocket | null = null;
 let subscribers: Array<Subscriber> = [];
 let subscriptions = new Map<Subscription, number>();
 
+function sendWhenReady(socket: WebSocket, message: any) {
+	if (socket.readyState === WebSocket.OPEN) {
+		socket.send(JSON.stringify(message));
+	} else {
+		socket.addEventListener("open", () => {
+			socket.send(JSON.stringify(message));
+		}, { once: true });
+	}
+}
+
 export function getSocket() {
   if (!socket) {
-    socket = new WebSocket("url");
+    socket = new WebSocket("/api/ws");
 
-    socket.onopen = () => {
+    socket.addEventListener("open", ()=>{
         console.log("connected to socket successfully");
-    };
+    })
 
     socket.onmessage = (messageEvent) => {
+
         const response: WsResponse = JSON.parse(messageEvent.data.toString());
         const {message, ...responseSubscription} = response;
         const callbacks = subscribers.filter((subscriber) => {
@@ -36,6 +47,7 @@ export function getSocket() {
 export const addSubscriber: (subscriber: Subscriber) => void = (subscriber: Subscriber) => {
     const { callback, ...subscription } = subscriber;
 
+
     const subscriptionCount = subscriptions.get(subscription);
     if (!subscriptionCount) {
         // subscribing
@@ -43,7 +55,7 @@ export const addSubscriber: (subscriber: Subscriber) => void = (subscriber: Subs
             type: "subscribe",
             ...subscription
         };
-        getSocket().send(JSON.stringify(subMessage));
+        sendWhenReady(getSocket(), subMessage);
         subscriptions.set(subscription, 1);
         
     } else {
@@ -63,7 +75,7 @@ export const removeSubscriber: (subscriber: Subscriber) => void = (subscriber: S
     if (!subscriptionCount) return;
 
     if (subscriptionCount === 1) {
-        getSocket().send(JSON.stringify(UnSubMessage));
+        sendWhenReady(getSocket(), UnSubMessage);
         subscriptions.delete(subscription);
     } else {
         subscriptions.set(subscription, subscriptionCount - 1);

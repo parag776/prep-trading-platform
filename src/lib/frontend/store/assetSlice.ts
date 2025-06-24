@@ -9,9 +9,9 @@ export const createAssetSlice: StateCreator<Store, [], [], AssetSlice> = (set, g
 	fetchAllAssets: async () => {
 		try {
 			const { data }: { data: Array<Asset> } = await axios.get("/api/assets");
-			const assets = new Map<Asset["id"], Asset>(data.map((asset) => [asset.id, asset]));
+			const assetMap = new Map<Asset["id"], Asset>(data.map((asset) => [asset.id, asset]));
 			if (data.length) {
-				set(() => ({ assetMap: assets, asset: data[0] }));
+				set(() => ({ assetMap, currentAsset: data[0] }));
 			} else {
 				console.error("assets are being returned empty.");
 				throw new Error("fetching assets went wrong.");

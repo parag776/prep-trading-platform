@@ -1,5 +1,5 @@
 import { Asset } from "@/generated/prisma";
-import { Loadable } from "@/lib/common/types";
+import { Loadable, LoadStatus } from "@/lib/common/types";
 import { useEffect, useState } from "react";
 import { AssetSlice } from "../store/types";
 import { useStore } from "../store/store";
@@ -24,14 +24,15 @@ export const useAllAssets = (): Loadable<Array<Asset>> => {
 	}
 };
 
-export const useFetchAllAssets = (): "error" | "ready" => {
-	const [status, setStatus] = useState<"error" | "ready">("ready");
-	const fetchAllAssets = useStore((s) => s.fetchAllAssets);
+export const useFetchAllAssets = (): LoadStatus => {
+	const [status, setStatus] = useState<LoadStatus>("loading");
+	const fetchAllAssets = useStore((state) => state.fetchAllAssets);
 
 	useEffect(() => {
 		(async () => {
 			try {
 				await fetchAllAssets();
+				setStatus("ready");
 			} catch (e) {
 				console.error(e);
 				setStatus("error");

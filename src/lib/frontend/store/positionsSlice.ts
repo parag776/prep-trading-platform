@@ -18,7 +18,7 @@ export const createPositionsSlice: StateCreator<Store, [], [], PositionsSlice> =
 	},
 	fetchPositions: async () => {
 		try {
-			const positions: Array<Position> = await axios.get(`/api/positions`);
+			const positions: Array<Position> = (await axios.get(`/api/positions`)).data;
 			set(() => ({ positions }));
 		} catch (e) {
 			throw new Error("Fetching positions went wrong: " + (e instanceof Error ? e.message : String(e)));

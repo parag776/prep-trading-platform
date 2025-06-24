@@ -1,16 +1,17 @@
 import { Position, Side } from "@/generated/prisma";
-import { Loadable, WsResponse } from "@/lib/common/types";
+import { Loadable, LoadStatus, WsResponse } from "@/lib/common/types";
 import { useEffect, useState } from "react";
 import { useMarkPrices } from "./markPriceHooks";
 import { addSubscriber, removeSubscriber, Subscriber } from "../store/socket";
 import { useStore } from "../store/store";
 
-export const useInitializePositions = (): "error" | "ready" => {
-	const [status, setStatus] = useState<"error" | "ready">("ready");
+export const useInitializePositions = (): LoadStatus => {
+	const [status, setStatus] = useState<LoadStatus>("loading");
 
 	const fetchPositions = useStore((state) => state.fetchPositions);
 	const updatePositions = useStore((state) => state.updatePositions);
 	const syncMarkPrice = useStore((state) => state.syncMarkPriceConnectionsWithPositionUpdates);
+	const fetchMarkPrices = useStore((state)=> state.fetchMarkPrices);
 
 	const subscriber: Subscriber = {
 		channel: "positions",
@@ -23,9 +24,12 @@ export const useInitializePositions = (): "error" | "ready" => {
 	};
 
 	const initializePositions = async () => {
+		
 		try {
 			await fetchPositions();
+			await fetchMarkPrices();
 			addSubscriber(subscriber);
+			setStatus("ready");
 		} catch (e) {
 			console.error(e);
 			setStatus("error");
@@ -33,6 +37,7 @@ export const useInitializePositions = (): "error" | "ready" => {
 	};
 
 	useEffect(() => {
+
 		initializePositions();
 		return () => removeSubscriber(subscriber);
 	}, []);
@@ -51,6 +56,7 @@ export const usePnl = (): Loadable<number> => {
 	const markPrices = useMarkPrices();
 
 	if (positions.status === "loading" || markPrices.status === "loading") return { status: "loading" };
+
 
 	const pnl = positions.data.reduce((pnl, position)=>{
 		const markPrice = markPrices.data.get(position.id);

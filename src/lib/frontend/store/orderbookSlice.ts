@@ -3,11 +3,12 @@ import { OrderbookDiffResponse, OrderBookLite } from "@/lib/common/types";
 import axios from "axios";
 import { StateCreator } from "zustand";
 import { getUpdatedOrderbook } from "../utils/orderbook";
-import { OrderbookSlice, Store } from "./types";
+import { DecimalPrecision, OrderbookSlice, Store } from "./types";
+import { computed, getDecimalPrecision } from "../utils/misc";
 
 
 
-export const createOrderbookSlice: StateCreator<Store, [], [], OrderbookSlice> = (set) => ({
+export const createOrderbookSlice: StateCreator<Store, [], [], OrderbookSlice> = (set, get) => ({
 	orderbook: null,
 	fetchOrderbook: async (asset: Asset) => {
 		try {
@@ -27,4 +28,27 @@ export const createOrderbookSlice: StateCreator<Store, [], [], OrderbookSlice> =
 			}
 		});
 	},
+	getDecimalPrecision: computed(()=>[get().orderbook], (orderbook): DecimalPrecision=>{
+		const decimalPrecision = {
+			quantity: 2,
+			price: 2,
+		};
+		if(!orderbook) return decimalPrecision;
+		const askOrders = orderbook.askOrderbook.orders;
+		const bidOrders = orderbook.bidOrderbook.orders;
+		if (askOrders.length) {
+			decimalPrecision.quantity = Math.min(
+				6,
+				Math.floor(Math.log10(askOrders[askOrders.length - 1].price))
+			);
+			decimalPrecision.price = Math.max(
+				0,
+				6 - Math.floor(Math.log10(askOrders[askOrders.length - 1].price))
+			);
+		} else if (bidOrders.length) {
+			decimalPrecision.quantity = Math.max(6, Math.log10(bidOrders[0].price));
+			decimalPrecision.price = Math.max(0, 6 - Math.floor(Math.log10(bidOrders[0].price)));
+		}
+		return decimalPrecision;
+	})
 });

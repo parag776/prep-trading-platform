@@ -17,7 +17,7 @@ export const createTradebookSlice: StateCreator<Store, [], [], TradebookSlice> =
 					maxTradeBookSize: configData.trade_book_size,
 					trades: data,
 				},
-				ltp: data[0].price,
+				ltp: data.at(0)?.price ?? 0,
 			}));
 		} catch (e) {
 			throw new Error("Tradebook fetching went wrong: " + (e instanceof Error ? e.message : String(e)));

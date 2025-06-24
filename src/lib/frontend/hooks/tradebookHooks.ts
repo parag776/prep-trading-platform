@@ -1,41 +1,42 @@
 import { Asset } from "@/generated/prisma";
 import { useEffect, useState } from "react";
-import { Loadable, WsResponse } from "@/lib/common/types";
+import { Loadable, LoadStatus, WsResponse } from "@/lib/common/types";
 import { addSubscriber, removeSubscriber, Subscriber } from "../store/socket";
 import { TradeBook } from "../utils/tradebook";
 import { useStore } from "../store/store";
 
-export const useInitializeTradebook = (asset: Asset): "error" | "ready" => {
-	
-
-	const [status, setStatus] = useState<"error" | "ready">("ready");
+export const useInitializeTradebook = (asset: Loadable<Asset>): LoadStatus => {
+	const [status, setStatus] = useState<LoadStatus>("loading");
 	const fetchTradebook = useStore((state) => state.fetchTradebook);
 	const updateTradebook = useStore((state) => state.updateTradebook);
 
-	const subscriber: Subscriber = {
-		channel: "tradebook",
-		assetId: asset.id,
-		callback: (response: WsResponse) => {
-			if (response.channel === "tradebook") {
-				updateTradebook(response.message);
-			}
-		},
-	};
-
-	const initializeTradebook = async () => {
-		try {
-			addSubscriber(subscriber);
-			await fetchTradebook(asset);
-		} catch (e) {
-			console.error(e);
-			setStatus("error");
-		}
-	};
-
 	useEffect(() => {
-		initializeTradebook();
-		return () => removeSubscriber(subscriber);
-	}, [asset.id]);
+		if (asset.status === "ready") {
+			const subscriber: Subscriber = {
+				channel: "tradebook",
+				assetId: asset.data.id,
+				callback: (response: WsResponse) => {
+					if (response.channel === "tradebook") {
+						updateTradebook(response.message);
+					}
+				},
+			};
+
+			const initializeTradebook = async () => {
+				try {
+					await fetchTradebook(asset.data);
+					addSubscriber(subscriber);
+					setStatus("ready");
+				} catch (e) {
+					console.error(e);
+					setStatus("error");
+				}
+			};
+
+			initializeTradebook();
+			return () => removeSubscriber(subscriber);
+		}
+	}, [asset]);
 
 	return status;
 };
@@ -47,11 +48,10 @@ export const useTradebook = (): Loadable<TradeBook> => {
 };
 
 export const useCurrentPrice = (): Loadable<number> => {
-	const tradebook = useStore((state)=> state.tradebook);
-	if (!tradebook) return {status: "loading"};
+	const tradebook = useStore((state) => state.tradebook);
+	if (!tradebook) return { status: "loading" };
 
-	if(tradebook.trades.length===0) return {status: "ready", data: 0};
+	if (tradebook.trades.length === 0) return { status: "ready", data: 0 };
 
-	return {status: "ready", data: tradebook.trades[0].price};
-
-}
+	return { status: "ready", data: tradebook.trades[0].price };
+};

@@ -1,4 +1,5 @@
 import { OrderBookLite, TradeResponse, WsResponse } from "@/lib/common/types";
+import { shallow } from "zustand/shallow";
 import {v4 as uuid} from "uuid";
 import { TradeBook } from "./tradebook";
 import axios from "axios";
@@ -74,3 +75,19 @@ export const fetchMarkPrice = async (assetId: string) => {
         throw new Error("Failed to fetch mark price: " + (err instanceof Error ? err.message : String(err)));
     }
 };
+
+export function computed<
+  const TDeps extends readonly unknown[] = unknown[],
+  TResult = unknown,
+>(depsFn: () => TDeps, computeFn: (...deps: TDeps) => TResult): () => TResult {
+  let prevDeps: TDeps | null = null;
+  let cachedResult: TResult;
+  return () => {
+    const deps = depsFn();
+    if (prevDeps === undefined || !shallow(prevDeps, deps)) {
+      prevDeps = deps;
+      cachedResult = computeFn(...deps);
+    }
+    return cachedResult;
+  };
+}
