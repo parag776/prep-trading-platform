@@ -2,6 +2,8 @@ import { Asset, Position, Resolution, Side, User } from "@/generated/prisma";
 import createRBTree from "functional-red-black-tree";
 import { OrderWithRequiredPrice } from "../common/types";
 
+
+
 export interface HalfOrderBook {
 	side: Side;
 	orders: createRBTree.Tree<OrderWithRequiredPrice, null>;
@@ -38,4 +40,7 @@ export type UserWithPositionsAndOpenOrders = extendedUser & {
 	positions: Map<Asset["id"], Position>;
 } & { orders: Map<OrderWithRequiredPrice["id"], OrderWithRequiredPrice> };
 
-export type LatestCandleByAssetAndResolution = Map<{ assetId: Asset["id"]; resolution: Resolution }, Candle>;
+export type LatestCandleByAssetAndResolution = Map<
+	string,
+	Candle
+>;

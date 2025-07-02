@@ -2,10 +2,10 @@ import { Order_Type, Side, User } from "@/generated/prisma";
 import { z } from "zod";
 import { assets, detailedUsersState, spotPrices } from "../store";
 import config from "../../../../config.json";
+import { getMarkPrice } from "../utils";
 
 export function getPlaceOrderValidation(userId: User["id"]) {
 	const userPositions = detailedUsersState.get(userId)?.positions!;
-
 	return z
 		.object({
 			type: z.string().refine((val) => Object.keys(Order_Type).includes(val), {
@@ -23,13 +23,13 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 		})
 		.transform((data) => {
 			const typeEnum = data.type as Order_Type
-			const sideEnum = data.type as Side
+			const sideEnum = data.side as Side
 			const {  type, side, ...rest } = data;
 			return { ...rest, type: typeEnum, side: sideEnum };
 		})
 		.superRefine((obj, ctx) => {
 			const actualLeverage = userPositions.get(obj.assetId)?.leverage;
-			if (actualLeverage !== obj.leverage) {
+			if (actualLeverage && actualLeverage !== obj.leverage) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
 					message:
@@ -37,7 +37,7 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 					path: ["leverage"],
 				});
 			}
-
+			const markPrice = getMarkPrice(obj.assetId);
 			if (!obj.price) {
 				if (obj.type === Order_Type.LIMIT) {
 					ctx.addIssue({
@@ -45,22 +45,47 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 						message: "with limit order, price is compulsory",
 						path: ["price"],
 					});
+					return;
+				}
+				if(obj.quantity*markPrice < 0.1){
+					ctx.addIssue({
+						code: z.ZodIssueCode.custom,
+						message: "Expected order value should be atleast 0.1 USDC",
+						path: ["price"],
+					});
+					return;
 				}
 				return;
+			} else {
+				if(obj.quantity<=0){
+					ctx.addIssue({
+						code: z.ZodIssueCode.custom,
+						message: "Order quantity should be greater than 0.",
+						path: ["price"],
+					});
+					return;
+				}
+				if(obj.quantity*obj.price < 0.1){
+					ctx.addIssue({
+						code: z.ZodIssueCode.custom,
+						message: "Order value should be atleast 0.1 USDC",
+						path: ["price"],
+					});
+					return;
+				}
 			}
-			const spotPrice = spotPrices.get(obj.assetId)!;
-			const minPrice = spotPrice * config.min_order_ratio;
-			const maxPrice = spotPrice * config.max_order_ratio;
+			const minPrice = markPrice * config.min_order_ratio;
+			const maxPrice = markPrice * config.max_order_ratio;
 			if (obj.price < minPrice) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: "Order price is way below spot price.",
+					message: "Order price is way below mark price.",
 					path: ["price"],
 				});
 			} else if (obj.price > maxPrice) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message: "Order price is way above spot price.",
+					message: "Order price is way above mark price.",
 					path: ["price"],
 				});
 			}

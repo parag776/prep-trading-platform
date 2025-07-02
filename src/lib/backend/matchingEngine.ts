@@ -3,7 +3,7 @@ import { calculateMarginAndCheckLiquidity } from "./marginRequirement";
 import { detailedUsersState, latestCandles, orderbooks } from "./store";
 import { AppError, ErrorType } from "../common/error";
 import config from "../../../config.json";
-import { adjustCandle, calculateFee, calculateMaintenanceMargin, calculateMarginWithFee, calculateMarginWithoutFee, calculateUserPnl } from "./utils";
+import { adjustCandle, calculateFee, calculateMaintenanceMargin, calculateMarginWithFee, calculateMarginWithoutFee, calculateUserPnl, getLatestCandle, printOrderbook } from "./utils";
 import { OrderBook } from "./types";
 import prisma, { addOrderToDB, addPositionToDB, appendUserBalanceInDB, deletePositionFromDB, updateLatestCandleToDB, updateOrderInDB, updatePositionInDB } from "./database";
 import { v4 as uuid } from "uuid";
@@ -132,8 +132,8 @@ function makeTrade(price: number, quantity: number, assetId: string, buyerId: Us
 	// if its last trade of the order, process the candle and update historical data.
 	if (isLastTrade) {
 		for (let resolution of resolutionInfo.keys()) {
-			const candle = latestCandles.get({ assetId, resolution })!;
 			adjustCandle(assetId, resolution, trade);
+			const candle = getLatestCandle(assetId, resolution);
 			databaseActions.push(() => updateLatestCandleToDB(assetId, resolution, candle));
 		}
 	}
@@ -286,9 +286,10 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 
 export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 	const user = detailedUsersState.get(order.userId)!;
-
 	// this is checking if enough liquidity is present to process the order..else throw an error.
 	const marginRequired = calculateMarginAndCheckLiquidity(order);
+
+
 
 	if (!isLiquidation) {
 		const accountEquity = user.usdc - user.funding_unpaid + calculateUserPnl(user);
@@ -299,6 +300,10 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 	}
 
 	let orderbook = orderbooks.get(order.assetId)!;
+	printOrderbook(orderbook);
+	
+	// orderbook.askOrderbook.orders.
+
 
 	if (order.side === Side.ASK) {
 		let remainingQuantity = order.quantity;

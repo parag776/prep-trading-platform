@@ -99,7 +99,11 @@ export function updateLatestCandleToDB(assetId: Asset["id"], resolution: Resolut
             volume: candle.volume,
         },
     })
-    }
+}
+
+export async function getAssetsFromDB(){
+    return await prisma.asset.findMany();
+}
 
 export async function pushToDatabase(databaseActions: Array<() => PrismaPromise<any>>){
     await prisma.$transaction(databaseActions.map((fn) => fn()));

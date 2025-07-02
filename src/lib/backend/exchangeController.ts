@@ -20,9 +20,9 @@ async function runExchangeOperation(operation: () => void) {
 }
 
 export async function placeOrder(clientOrder: PlaceOrder, userId: User["id"]) {
+
+
 	await runExchangeOperation(() => {
-		// assign database actions an empty array
-		databaseActions = [];
 
 		const order = {
 			...clientOrder,

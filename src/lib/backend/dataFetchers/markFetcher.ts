@@ -1,9 +1,8 @@
 import WebSocket from "ws";
-import { assets, markPrices, spotPrices, symbolToAssetId } from "../store";
 import { Asset } from "@/generated/prisma";
 import axios from "axios";
 
-export function streamMarkPrices() {
+export function streamMarkPrices(assets: Array<Asset>, markPrices: Map<Asset["id"], number>, symbolToAssetId: Map<Asset["symbol"], Asset["id"]>) {
 	const baseUrl = "wss://fstream.binance.com/";
 	const streams = assets.map((asset) => asset.symbol.toLowerCase() + "usdc@markPrice@1s").join("/");
 
@@ -32,7 +31,6 @@ export function streamMarkPrices() {
 				const dataObj = JSON.parse(data.toString());
 				let symbol = getSymbolFromStream(dataObj.stream);
 				const assetId = symbolToAssetId.get(symbol)!;
-				console.log(Number(dataObj.data.p));
 				markPrices.set(assetId, Number(dataObj.data.p));
 			} catch (err) {
 				console.error("Error parsing data for fetching mark prices:", err);
@@ -60,5 +58,3 @@ export async function fetchHttpMarkPrice(asset: Asset): Promise<number> {
 	const response = await axios.get(url);
 	return Number(response.data.price);
 }
-
-streamMarkPrices();

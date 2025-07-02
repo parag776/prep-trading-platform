@@ -1,9 +1,8 @@
 import WebSocket from "ws";
-import { assets, spotPrices, symbolToAssetId } from "../store";
 import { Asset } from "@/generated/prisma";
 import axios from "axios";
 
-export function streamSpotPrices() {
+export function streamSpotPrices(assets: Array<Asset>, spotPrices: Map<Asset["id"], number>, symbolToAssetId: Map<Asset["symbol"], Asset["id"]>) {
 	const baseUrl = "wss://stream.binance.com:9443/";
 	const streams = assets.map((asset) => asset.symbol.toLowerCase() + "usdc@miniTicker").join("/");
 

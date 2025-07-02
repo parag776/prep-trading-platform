@@ -4,7 +4,7 @@ import { resolutionInfo } from "../common/data";
 import config from "../../../config.json";
 import { CumulativeOrderLite, OrderBookLite, OrderWithRequiredPrice } from "../common/types";
 import createRBTree from "functional-red-black-tree";
-import { UserWithPositionsAndOpenOrders } from "./types";
+import { Candle, LatestCandleByAssetAndResolution, OrderBook, UserWithPositionsAndOpenOrders } from "./types";
 
 export function calculateMarginWithoutFee(price: number, quantity: number, leverage: number) {
 	return (price * quantity) / leverage;
@@ -24,7 +24,7 @@ export function calculateMaintenanceMargin(price: number, quantity: number) {
 
 // seeing if the candle is past their life, if not adjust it and if it is then create a new candle.
 export function adjustCandle(assetId: Asset["id"], resolution: Resolution, trade: Trade) {
-	const currentCandle = latestCandles.get({ assetId, resolution })!;
+	const currentCandle = getLatestCandle(assetId, resolution);
 	const duration = resolutionInfo.get(resolution)!.duration;
 	const tradetime = getTime(trade.createdAt);
 
@@ -43,10 +43,11 @@ export function adjustCandle(assetId: Asset["id"], resolution: Resolution, trade
 		currentCandle.low = Math.min(currentCandle.low, trade.price);
 		currentCandle.volume += trade.quantity;
 	}
+	console.log("reached here..")
 }
 
 export function getContractPrice(assetId: Asset["id"]) {
-	return latestCandles.get({ assetId, resolution: Resolution.ONE_MINUTE })!.close;
+	return getLatestCandle(assetId, Resolution.ONE_MINUTE).close;
 }
 
 export function getMarkPrice(assetId: Asset["id"]): number {
@@ -163,4 +164,18 @@ export function fixedGapSetInterval(cb: ()=>Promise<void> | void, ms: number){
 		await cb();
 		fixedGapSetInterval(cb, ms);
 	}, ms)
+}
+
+
+export function printOrderbook(orderbook: OrderBook){
+	console.log("asset: ", orderbook.asset);
+	console.log("ask-orders: ");
+	(orderbook.askOrderbook.orders).forEach((key)=>{
+		console.log(key);
+	})
+	
+	console.log("bid-orders: ");
+	(orderbook.askOrderbook.orders).forEach((key)=>{
+		console.log(key);
+	})
 }

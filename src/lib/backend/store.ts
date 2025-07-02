@@ -3,7 +3,7 @@ import { Asset, PrismaClient, Side, Resolution, User, Order_Status, Position } f
 import { OrderWithRequiredPrice } from "../common/types";
 import createRBTree from "functional-red-black-tree";
 import config from "../../../config.json";
-import { calculateMaintenanceMargin, calculateMarginWithoutFee, calculateMarginWithFee, getContractPrice } from "./utils";
+import { calculateMaintenanceMargin, calculateMarginWithoutFee, calculateMarginWithFee, getContractPrice, getLatestCandle } from "./utils";
 import { streamSpotPrices } from "./dataFetchers/spotFetcher";
 import axios from "axios";
 import { streamMarkPrices } from "./dataFetchers/markFetcher";
@@ -116,7 +116,7 @@ async function getOrderbooks() {
 }
 
 async function getLatestCandles() {
-	latestCandles = new Map<{ assetId: Asset["id"]; resolution: Resolution }, Candle>();
+	latestCandles = new Map<string, Candle>();
 	for (const asset of assets) {
 		for (const resolution of Object.values(Resolution)) {
 			const data = await prisma.historical_Data.findFirst({
@@ -145,7 +145,7 @@ async function getLatestCandles() {
 				close: 0,
 				volume: 0,
 			};
-			latestCandles.set({ assetId: asset.id, resolution }, data || defaultCandle);
+			latestCandles.set(J{ assetId: asset.id, resolution }, data || defaultCandle);
 		}
 	}
 }
@@ -163,7 +163,7 @@ async function getMarkPrices() {
 	} catch (e) {
 		markPrices = new Map(
 			assets.map((asset) => {
-				return [asset.id, latestCandles.get({ assetId: asset.id, resolution: Resolution.ONE_MINUTE })!.close] as [Asset["id"], number];
+				return [asset.id, getLatestCandle(asset.id, Resolution.ONE_MINUTE).close] as [Asset["id"], number];
 			})
 		);
 	}
@@ -242,8 +242,8 @@ async function getInitialData() {
 	await getMarkPrices();
 	await getDetailedUsersState();
 	await getSpotPrices();
-	streamMarkPrices();
-	streamSpotPrices();
+	streamMarkPrices(assets, markPrices, symbolToAssetId);
+	streamSpotPrices(assets, spotPrices, symbolToAssetId);
 	//   orderbooks = new Map<Asset["id"], OrderBook>(orderbookEntities);
 
 	// getting user information
