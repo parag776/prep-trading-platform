@@ -1,6 +1,5 @@
 import prisma from "@/lib/backend/database";
 import { getResolutionFromString, resolutionSymbols } from "@/lib/common/data";
-import { assets } from "@/lib/backend/store";
 import { getTime } from "@/lib/backend/utils";
 import { historyValidation } from "@/lib/backend/validations/chartValidations";
 
@@ -15,7 +14,6 @@ export async function GET(req: Request) {
 			resolutionString: searchParams.get("resolution"),
 			countback: searchParams.get("countback"),
 		};
-		console.log(params);
 
 		// validation schema
 

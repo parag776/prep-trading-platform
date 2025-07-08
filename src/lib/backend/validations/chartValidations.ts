@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { assets, symbolToAssetId } from "../store";
 import { resolutionSymbols } from "@/lib/common/data";
+import { getAssetFromSymbol, isValidSymbol } from "../store/assetStore";
 
 export const historyValidation = z.object({
-	symbol: z.string().refine((val) => assets.some((asset) => asset.symbol === val), {
+	symbol: z.string().refine((symbol) => isValidSymbol(symbol), {
 		message: "Invalid symbol",
 	}),
 	resolutionString: z.string().refine((val) => resolutionSymbols.includes(val), {
@@ -13,7 +13,7 @@ export const historyValidation = z.object({
 	to: z.coerce.number().int().nonnegative(),
 	countback: z.coerce.number().int().nonnegative(),
 }).transform((data) => {
-	const assetId = symbolToAssetId.get(data.symbol)!;
+	const assetId = getAssetFromSymbol(data.symbol).id;
 	const { symbol, ...rest } = data;
 	return { ...rest, assetId };
 });;

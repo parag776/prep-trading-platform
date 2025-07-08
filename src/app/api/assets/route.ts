@@ -1,8 +1,8 @@
-import { assets } from "@/lib/backend/store";
+import { getAllAssets } from "@/lib/backend/store/assetStore";
 import { requestWrapper } from "../requestWrapper";
 
-const GET = requestWrapper(async (req: Request)=>{
-    return new Response(JSON.stringify(assets), {
+export const GET = requestWrapper(async (req: Request)=>{
+    return new Response(JSON.stringify(getAllAssets()), {
         status: 200,
         headers: {
             "content-type": "application/json"

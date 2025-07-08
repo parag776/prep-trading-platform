@@ -1,9 +1,8 @@
-import NextAuth, { Session } from "next-auth";
+import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import prisma from "@/lib/backend/database";
 import { v4 as uuid } from "uuid";
 import Github from "next-auth/providers/github";
-import { User } from "@/generated/prisma";
 import { JWT, JWTDecodeParams, JWTEncodeParams } from "next-auth/jwt";
 import jwt from "jsonwebtoken";
 

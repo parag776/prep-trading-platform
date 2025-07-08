@@ -25,5 +25,5 @@ export const createOrderSlice: StateCreator<Store, [], [], OrderSlice>  = (set) 
 		} catch (e) {
 			throw new Error("Orders fetching went wrong: " + (e instanceof Error ? e.message : String(e)));
 		}
-	},
+	}
 });

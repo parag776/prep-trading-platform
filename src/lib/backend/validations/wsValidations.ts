@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { assets } from "../store";
 import { Asset, User } from "@/generated/prisma";
 import { getPlaceOrderValidation, getCancelOrderValidation } from "./orderValidation";
+import { isValidAssetId } from "../store/assetStore";
 
 export function getSubscribeMessageValidation(userId: User["id"] | null) {
 	return z
@@ -14,7 +14,7 @@ export function getSubscribeMessageValidation(userId: User["id"] | null) {
 				.refine(
 					(assetId) => {
 						if(!assetId) return true;
-						return assets.some((asset) => asset.id === assetId);
+						return isValidAssetId(assetId);
 					},
 					{
 						message: "assetId is not valid.",

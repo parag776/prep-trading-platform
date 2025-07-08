@@ -11,8 +11,7 @@ export const GET = requestWrapper(async (req: Request)=>{
 		symbol: searchParams.get("symbol"),
 	};
 
-    console.log(params); // testing here.
-    const { assetId } = symbolValidation.parse(params);
+    const { asset } = symbolValidation.parse(params);
 
     const trades: Array<TradeLite> = await prisma.trade.findMany({
         select: {
@@ -22,7 +21,7 @@ export const GET = requestWrapper(async (req: Request)=>{
             createdAt: true,
         },
         where: {
-            assetId
+            assetId: asset.id
         },
         orderBy: {
             createdAt: "desc"

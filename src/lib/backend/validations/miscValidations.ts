@@ -1,17 +1,17 @@
 import { z } from "zod";
-import { assets, symbolToAssetId } from "../store";
+import { getAssetFromSymbol, isValidSymbol } from "../store/assetStore";
 export const depositValidation = z.object({
 	amount: z.coerce.number(),
 });
 
 export const symbolValidation = z
 	.object({
-		symbol: z.string().refine((symbol) => assets.some((asset) => asset.symbol === symbol), {
+		symbol: z.string().refine((symbol) => isValidSymbol(symbol), {
 			message: "symbol is not valid.",
 		}),
 	})
 	.transform((data) => {
-		const assetId = symbolToAssetId.get(data.symbol)!;
+		const asset = getAssetFromSymbol(data.symbol);
 		const { symbol, ...rest } = data;
-		return { ...rest, assetId };
+		return { ...rest, asset };
 	});

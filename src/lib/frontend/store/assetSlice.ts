@@ -12,6 +12,7 @@ export const createAssetSlice: StateCreator<Store, [], [], AssetSlice> = (set, g
 			const assetMap = new Map<Asset["id"], Asset>(data.map((asset) => [asset.id, asset]));
 			if (data.length) {
 				set(() => ({ assetMap, currentAsset: data[0] }));
+				get().subscribeToMarkPrice(data[0]);
 			} else {
 				console.error("assets are being returned empty.");
 				throw new Error("fetching assets went wrong.");
@@ -22,8 +23,12 @@ export const createAssetSlice: StateCreator<Store, [], [], AssetSlice> = (set, g
 	},
 	updateCurrentAsset: (assetId) => {
 		set((state) => {
-			const asset = state.assetMap?.get(assetId);
-			return { currentAsset: asset ?? null };
+			const newAsset = state.assetMap?.get(assetId);
+
+			if(state.currentAsset) get().unsubscribeToMarkPrice(state.currentAsset);
+			if(newAsset) get().subscribeToMarkPrice(newAsset);
+
+			return { currentAsset: newAsset ?? null };
 		});
 	},
 	getAsset: (assetId: Asset["id"]): Asset | null => {

@@ -5,8 +5,8 @@ import { addAccountMetricResponse, respondToSubscribers } from "./webSockets/uti
 import { UserWithPositionsAndOpenOrders } from "./types";
 import { v4 as uuid } from "uuid";
 import { PlaceOrder } from "../common/types";
-import { getMarkPrice } from "./utils";
-
+import { getMarkPrice } from "./store/priceStore";
+import { getAllUsers } from "./store/userStore";
 // this array will include all the functions that will run and
 export let databaseActions: Array<() => PrismaPromise<any>>;
 
@@ -79,8 +79,9 @@ async function liquidateUser(user: UserWithPositionsAndOpenOrders) {
 	});
 }
 
-export async function checkLiquidation(detailedUsersState: Map<User["id"], UserWithPositionsAndOpenOrders>) {
-	for (const [userId, user] of detailedUsersState) {
+export async function checkLiquidation() {
+	const users = getAllUsers()
+	for (const [userId, user] of users) {
 		let pnl = 0;
 		for (const [positionId, position] of user.positions) {
 			const markPrice = getMarkPrice(position.assetId);

@@ -1,3 +1,4 @@
+"use client"
 import { Side } from '@/generated/prisma'
 import { CumulativeOrderLite } from '@/lib/common/types'
 import React, { useMemo, useRef } from 'react'

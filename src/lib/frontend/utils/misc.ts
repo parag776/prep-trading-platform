@@ -3,6 +3,7 @@ import { shallow } from "zustand/shallow";
 import {v4 as uuid} from "uuid";
 import { TradeBook } from "./tradebook";
 import axios from "axios";
+import { useStore } from "zustand";
 
 export function getContractPriceFromResponse(response: WsResponse){
 

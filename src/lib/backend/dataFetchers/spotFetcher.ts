@@ -1,10 +1,12 @@
 import WebSocket from "ws";
 import { Asset } from "@/generated/prisma";
 import axios from "axios";
+import { getAllAssets, getAssetFromSymbol } from "../store/assetStore";
+import { updateSpotPrice } from "../store/priceStore";
 
-export function streamSpotPrices(assets: Array<Asset>, spotPrices: Map<Asset["id"], number>, symbolToAssetId: Map<Asset["symbol"], Asset["id"]>) {
+export function streamSpotPrices() {
 	const baseUrl = "wss://stream.binance.com:9443/";
-	const streams = assets.map((asset) => asset.symbol.toLowerCase() + "usdc@miniTicker").join("/");
+	const streams = getAllAssets().map((asset) => asset.symbol.toLowerCase() + "usdc@miniTicker").join("/");
 
 	const fullUrl = baseUrl + "stream?streams=" + streams;
 
@@ -30,9 +32,8 @@ export function streamSpotPrices(assets: Array<Asset>, spotPrices: Map<Asset["id
 		ws.on("message", (data) => {
 			try {
 				const dataObj = JSON.parse(data.toString());
-				let symbol = getSymbolFromStream(dataObj.stream);
-				const assetId = symbolToAssetId.get(symbol)!;
-				spotPrices.set(assetId, Number(dataObj.data.c));
+				const assetId = getAssetFromSymbol(getSymbolFromStream(dataObj.stream)).id;
+				updateSpotPrice(assetId, Number(dataObj.data.c));
 			} catch (err) {
 				console.error("Error parsing data for fetching stock prices:", err);
 			}

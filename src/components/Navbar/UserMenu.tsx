@@ -2,8 +2,11 @@
 import { signOut, useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
 import Button from "./Button";
+import { useBalance } from "@/lib/frontend/hooks/accountHooks";
 
-function UserMenu({ userBalance }: { userBalance: number }) {
+function UserMenu() {
+
+	const balance = useBalance();
 	const menuRef = useRef<null | HTMLDivElement>(null);
 	function openMenu() {
 		if (menuRef.current) {
@@ -50,7 +53,7 @@ function UserMenu({ userBalance }: { userBalance: number }) {
 							<div className="px-2 ">
 								<span>
 									{" "}
-									<img src="/icons/usdc.png" className="inline" /> USDC --&gt; {userBalance}
+									<img src="/icons/usdc.png" className="inline" /> USDC --&gt; {balance.status==="ready"?balance.data:0}
 								</span>
 							</div>
 						</div>

@@ -11,13 +11,18 @@
   --cumulative-quantity-green: #1B3B33;
 
   --quantity-red: #7F3338;
-  --quantity-green: #12654A;
+  --color-background-4: #12654A;
 
   --light-gray: "#e5e7eb"
 }
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.6); /* change backdrop color and opacity */
+  backdrop-filter: blur(3px);          /* optional: blur effect */
 }
 
 @theme inline {
@@ -31,6 +36,7 @@
 
   --color-background-green: #0C2922;
   --color-background-blue: #172336;
+  --color-background-red: #382429;
 
   --color-text-green: #02AC6D;
   --color-text-blue: #4686E8;

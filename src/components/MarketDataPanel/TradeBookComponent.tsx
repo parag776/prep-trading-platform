@@ -1,40 +1,38 @@
+"use client"
 import { Asset } from "@/generated/prisma";
 import { getArrayWithKeys } from "@/lib/frontend/utils/misc";
 import { TradeBook } from "@/lib/frontend/utils/tradebook";
 import React, { useMemo, useState } from "react";
 import Loading from "../Loading";
+import { useTradebook } from "@/lib/frontend/hooks/tradebookHooks";
+import { useAsset } from "@/lib/frontend/hooks/assetHooks";
+import { useDecimalPrecision } from "@/lib/frontend/hooks/orderbookHooks";
 
-function TradeBookComponent({
-	tradebook,
-	asset,
-	decimalPoints,
-}: {
-	tradebook: TradeBook | null;
-	asset: Asset;
-	decimalPoints: { quantity: number; price: number };
-}) {
+function TradeBookComponent() {
+	const tradebook = useTradebook();
+	const asset = useAsset();
+	const decimalPoints = useDecimalPrecision();
+
 	const [isSizeInUsdc, setIsSizeInUsdc] = useState(false);
+	if (tradebook.status === "loading" || asset.status === "loading") return <Loading />;
 
 	function toggleIsSizeInUsdc() {
 		setIsSizeInUsdc((isSizeInUsdc) => !isSizeInUsdc);
 	}
 
-	const trades = tradebook?.trades;
+	const trades = tradebook.data.trades;
 	if (!trades) return <Loading />;
 
 	let tradesWithKeys = useMemo(() => {
 		return getArrayWithKeys(trades);
-	}, [tradebook]);
+	}, [tradebook.data]);
 
 	return (
 		<div className="font-sans h-full flex flex-col">
 			<div className="flex text-[13px] h-[30px] items-start">
 				<p className="flex w-[30%] items-center">Price {"(USDC)"}</p>
-				<p
-					className="flex w-[35%] items-center justify-end cursor-pointer text-gray-400 active:text-gray-300"
-					onClick={toggleIsSizeInUsdc}
-				>
-					Qty {`(${isSizeInUsdc ? "USDC" : asset.symbol})`}
+				<p className="flex w-[35%] items-center justify-end cursor-pointer text-gray-400 active:text-gray-300" onClick={toggleIsSizeInUsdc}>
+					Qty {`(${isSizeInUsdc ? "USDC" : asset.data.symbol})`}
 				</p>
 				<p className="flex w-[35%] items-center justify-end text-gray-400">Time</p>
 			</div>
@@ -42,10 +40,9 @@ function TradeBookComponent({
 				{tradesWithKeys.map((trade, index, array) => {
 					// calculating price color....
 					let priceColor = "#05AD6D"; //  green (default)
-					if (index < array.length-1) {
+					if (index < array.length - 1) {
 						const prevTrade = array[index + 1];
-						if (trade.price >= prevTrade.price)
-							priceColor = "#05AD6D"; // green (increase in price)
+						if (trade.price >= prevTrade.price) priceColor = "#05AD6D"; // green (increase in price)
 						else priceColor = "#DD4548"; // red (decrease in price);
 					}
 
@@ -55,13 +52,9 @@ function TradeBookComponent({
 								{trade.price.toFixed(decimalPoints.price)}
 							</p>
 							<p className="flex w-[35%] items-center justify-end text-gray-200">
-								{isSizeInUsdc
-									? (trade.quantity * trade.price).toFixed(decimalPoints.price)
-									: trade.quantity.toFixed(decimalPoints.quantity)}
+								{isSizeInUsdc ? (trade.quantity * trade.price).toFixed(decimalPoints.price) : trade.quantity.toFixed(decimalPoints.quantity)}
 							</p>
-							<p className="flex w-[35%] items-center justify-end text-gray-400">
-								{trade.createdAt.toISOString().substring(11, 19)}
-							</p>
+							<p className="flex w-[35%] items-center justify-end text-gray-400">{trade.createdAt.toISOString().substring(11, 19)}</p>
 						</div>
 					);
 				})}

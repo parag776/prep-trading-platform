@@ -1,7 +1,6 @@
 "use client";
 import { MouseEvent, useRef } from "react";
 import Button from "./Button";
-import "./TransactionButton.css";
 
 function TransactionButton({ type, callback }: { type: "deposit" | "withdraw"; callback: (amount: number) => void }) {
 	const inputRef = useRef<null | HTMLInputElement>(null);
@@ -40,8 +39,6 @@ function TransactionButton({ type, callback }: { type: "deposit" | "withdraw"; c
 		green: "shadow-background-green",
 		white: "shadow-background-white",
 	}[type === "deposit" ? "green" : "blue"];
-
-	console.log(shadowBackgroundClass);
 
 	return (
 		<div className="rounded-lg">

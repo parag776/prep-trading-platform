@@ -4,7 +4,7 @@ import axios from "axios";
 import {  StateCreator } from "zustand";
 import { MarkPriceSlice, Store } from "./types";
 
-const markPriceConnections = new Map<Asset["id"], WebSocket>();
+const markPriceConnections = new Map<Asset["id"], {ws: WebSocket, subscriptionCount: number}>();
 
 export const createMarkPriceSlice: StateCreator<Store, [], [], MarkPriceSlice> = (set, get) => ({
 	markPrices: null,
@@ -51,19 +51,28 @@ export const createMarkPriceSlice: StateCreator<Store, [], [], MarkPriceSlice> =
 		}
 	},
 	subscribeToMarkPrice(asset: Asset) {
-		const symbol = asset.symbol + "USDC";
+
+		const assetId = asset.id;
+		const connectionData = markPriceConnections.get(assetId);
+		if(connectionData){
+			connectionData.subscriptionCount++;
+			return;
+		}
+
+		const symbol = asset.symbol.toLowerCase() + "usdc";
 		let retries = 0;
 
 		const connect = () => {
 			const ws = new WebSocket(`wss://fstream.binance.com/ws/${symbol}@markPrice`);
 			ws.onmessage = (event) => {
+
 				const data = JSON.parse(event.data);
 				const markPrice = parseFloat(data.p); // `p` = mark price
 				get().updateMarkPrice(asset, markPrice);
 			};
 
 			ws.onopen = (event) => {
-				markPriceConnections.set(asset.id, ws);
+				markPriceConnections.set(assetId, {ws, subscriptionCount: 1});
 				retries = 0;
 			};
 
@@ -85,12 +94,19 @@ export const createMarkPriceSlice: StateCreator<Store, [], [], MarkPriceSlice> =
 
 	unsubscribeToMarkPrice(asset: Asset) {
 		const assetId = asset.id;
-		const ws = markPriceConnections.get(assetId);
-		if (ws) {
-			ws.close();
-			get().removeMarkPrice(asset);
+		const connectionData = markPriceConnections.get(assetId);
+		if (connectionData) {
+			let {ws, subscriptionCount} = connectionData;
+			if(subscriptionCount===1){
+				ws.close();
+				get().removeMarkPrice(asset);
+			} else {
+				subscriptionCount--;
+				markPriceConnections.set(assetId, {ws, subscriptionCount})
+			}
 		}
 	},
+
 	syncMarkPriceConnectionsWithPositionUpdates(updates: Array<PositionDiffResponse>) {
 		for (const update of updates) {
 			const asset = get().getAsset(update.assetId);
@@ -104,5 +120,5 @@ export const createMarkPriceSlice: StateCreator<Store, [], [], MarkPriceSlice> =
 				}
 			}
 		}
-	},
+	}
 });

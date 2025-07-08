@@ -1,19 +1,18 @@
 import { symbolValidation } from "@/lib/backend/validations/miscValidations";
 import { requestWrapper } from "../requestWrapper";
-import { getMarkPrice } from "@/lib/backend/utils";
+import { getMarkPrice } from "@/lib/backend/store/priceStore";
 
 export const GET = requestWrapper(async (req: Request)=>{
 
-        console.log("reached here..")
     
         const {searchParams} = new URL(req.url);
         const params = {
             symbol: searchParams.get("symbol")
         }
     
-        const {assetId} = symbolValidation.parse(params);
+        const {asset} = symbolValidation.parse(params);
         
-        const markPrice = getMarkPrice(assetId);
+        const markPrice = getMarkPrice(asset.id);
         
     return new Response(JSON.stringify({markPrice}), {
         status: 200,

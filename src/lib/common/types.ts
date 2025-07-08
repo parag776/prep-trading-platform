@@ -156,7 +156,7 @@ export type ResponseMessageMap = {
 	accountMetrics: AccountMetricsResponse;
 };
 
-type status = "error" | "loading" | "ready";
+export type LoadStatus = "error" | "loading" | "ready";
 
 export type Ready<T> = { status: "ready"; data: T };
 export type Loading = { status: "loading" };

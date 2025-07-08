@@ -1,6 +1,6 @@
 import { resolutionInfo } from "@/lib/common/data";
 import { requestWrapper } from "../../requestWrapper";
-import { assets } from "@/lib/backend/store";
+import { getAllAssets } from "@/lib/backend/store/assetStore";
 
 export const GET = requestWrapper(async function(req: Request){
 
@@ -9,8 +9,8 @@ export const GET = requestWrapper(async function(req: Request){
 
     const cryptoSymbols = [
         {
-            symbol: assets.map(({symbol})=>symbol),
-            description: assets.map(({name})=>name),
+            symbol: getAllAssets().map(({symbol})=>symbol),
+            description: getAllAssets().map(({name})=>name),
             exchange: "BINANCE",
             listed_exchange: "BINANCE",
             traded_exchange: "BINANCE",
@@ -21,7 +21,7 @@ export const GET = requestWrapper(async function(req: Request){
             has_intraday: true,
             visible_plots_set: "ohlcv",
             type: "crypto",
-            ticker: assets.map(({symbol})=>symbol),
+            ticker: getAllAssets().map(({symbol})=>symbol),
             timezone: "Etc/UTC",
             session: "24x7",
             session_holidays: "",

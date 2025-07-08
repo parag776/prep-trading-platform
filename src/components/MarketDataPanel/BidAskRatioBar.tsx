@@ -1,3 +1,4 @@
+"use client"
 import { OrderBookLite } from "@/lib/common/types";
 import React from "react";
 

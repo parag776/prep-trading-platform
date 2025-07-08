@@ -1,10 +1,8 @@
-import { Asset, Historical_Data, Resolution, Side, Trade } from "@/generated/prisma";
-import { latestCandles, markPrices, orderbooks } from "./store";
+import {  Historical_Data, Side, } from "@/generated/prisma";
 import { resolutionInfo } from "../common/data";
 import config from "../../../config.json";
-import { CumulativeOrderLite, OrderBookLite, OrderWithRequiredPrice } from "../common/types";
-import createRBTree from "functional-red-black-tree";
-import { Candle, LatestCandleByAssetAndResolution, OrderBook, UserWithPositionsAndOpenOrders } from "./types";
+import {UserWithPositionsAndOpenOrders } from "./types";
+import { getMarkPrice } from "./store/priceStore";
 
 export function calculateMarginWithoutFee(price: number, quantity: number, leverage: number) {
 	return (price * quantity) / leverage;
@@ -22,95 +20,8 @@ export function calculateMaintenanceMargin(price: number, quantity: number) {
 	return price * quantity * config.maintainence_margin;
 }
 
-// seeing if the candle is past their life, if not adjust it and if it is then create a new candle.
-export function adjustCandle(assetId: Asset["id"], resolution: Resolution, trade: Trade) {
-	const currentCandle = getLatestCandle(assetId, resolution);
-	const duration = resolutionInfo.get(resolution)!.duration;
-	const tradetime = getTime(trade.createdAt);
-
-	const candleStartTimestamp = Math.floor(tradetime / duration) * duration;
-
-	if (getTime(currentCandle.timestamp) < candleStartTimestamp) {
-		currentCandle.timestamp = new Date(candleStartTimestamp);
-		currentCandle.open = trade.price;
-		currentCandle.high = trade.price;
-		currentCandle.low = trade.price;
-		currentCandle.close = trade.price;
-		currentCandle.volume = trade.quantity;
-	} else {
-		currentCandle.close = trade.price;
-		currentCandle.high = Math.max(currentCandle.high, trade.price);
-		currentCandle.low = Math.min(currentCandle.low, trade.price);
-		currentCandle.volume += trade.quantity;
-	}
-	console.log("reached here..")
-}
-
-export function getContractPrice(assetId: Asset["id"]) {
-	return getLatestCandle(assetId, Resolution.ONE_MINUTE).close;
-}
-
-export function getMarkPrice(assetId: Asset["id"]): number {
-	return markPrices.get(assetId)!;
-}
-
 export function getTime(date: Date) {
 	return Math.floor(date.getTime() / 1000);
-}
-
-// pure function -->
-function getOrdersLiteArray(orders: createRBTree.Tree<OrderWithRequiredPrice, null>) {
-	const ordersArray = orders.keys;
-
-	const ordersLite = new Array<CumulativeOrderLite>();
-
-	let latestOrderTime: number = 0;
-	if (ordersArray.length === 0) return { ordersLite, latestOrderTime };
-
-	const side = ordersArray[0].side;
-	let price = ordersArray[0].price;
-	let quantity = ordersArray[0].quantity;
-	let cumulativeQuantity = ordersArray[0].quantity;
-	latestOrderTime = ordersArray[0].createdAt.getTime();
-
-	for (let i = 1; i < ordersArray.length; i++) {
-		latestOrderTime = Math.max(latestOrderTime, ordersArray[i].createdAt.getTime());
-		if (price === ordersArray[i].price) {
-			quantity += ordersArray[i].price;
-		} else {
-			ordersLite.push({ price, quantity, cumulativeQuantity, side });
-			price = ordersArray[i].price;
-			quantity = ordersArray[i].quantity;
-		}
-		cumulativeQuantity += ordersArray[i].quantity;
-	}
-	ordersLite.push({ price, quantity, cumulativeQuantity, side });
-
-	return { ordersLite, latestOrderTime };
-}
-
-export function getOrderbookLite(assetId: Asset["id"]) {
-	const orderbook = orderbooks.get(assetId)!;
-
-	const askOrders = orderbook.askOrderbook.orders;
-	const bidOrders = orderbook.bidOrderbook.orders;
-
-	const askOrdersLite = getOrdersLiteArray(askOrders);
-	const bidOrdersLite = getOrdersLiteArray(bidOrders);
-
-	const orderbookLite: OrderBookLite = {
-		lastOrderTimestamp: new Date(Math.max(askOrdersLite.latestOrderTime, bidOrdersLite.latestOrderTime)),
-		askOrderbook: {
-			side: Side.ASK,
-			orders: askOrdersLite.ordersLite,
-		},
-		bidOrderbook: {
-			side: Side.BID,
-			orders: bidOrdersLite.ordersLite,
-		},
-	};
-
-	return orderbookLite;
 }
 
 export function getAllResolutionData(data: Array<Historical_Data>) {
@@ -159,23 +70,9 @@ export function calculateUserPnl(user: UserWithPositionsAndOpenOrders) {
 	return pnl;
 }
 
-export function fixedGapSetInterval(cb: ()=>Promise<void> | void, ms: number){
-	setTimeout(async ()=>{
+export function fixedGapSetInterval(cb: () => Promise<void> | void, ms: number) {
+	setTimeout(async () => {
 		await cb();
 		fixedGapSetInterval(cb, ms);
-	}, ms)
-}
-
-
-export function printOrderbook(orderbook: OrderBook){
-	console.log("asset: ", orderbook.asset);
-	console.log("ask-orders: ");
-	(orderbook.askOrderbook.orders).forEach((key)=>{
-		console.log(key);
-	})
-	
-	console.log("bid-orders: ");
-	(orderbook.askOrderbook.orders).forEach((key)=>{
-		console.log(key);
-	})
+	}, ms);
 }

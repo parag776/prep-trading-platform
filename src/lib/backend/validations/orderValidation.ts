@@ -1,20 +1,19 @@
 import { Order_Type, Side, User } from "@/generated/prisma";
 import { z } from "zod";
-import { assets, detailedUsersState, spotPrices } from "../store";
 import config from "../../../../config.json";
-import { getMarkPrice } from "../utils";
+import { isValidAssetId } from "../store/assetStore";
+import { getUser, getUserPositions } from "../store/userStore";
+import { getMarkPrice } from "../store/priceStore";
 
 export function getPlaceOrderValidation(userId: User["id"]) {
-	const userPositions = detailedUsersState.get(userId)?.positions!;
+	const userPositions = getUserPositions(userId);
 	return z
 		.object({
 			type: z.string().refine((val) => Object.keys(Order_Type).includes(val), {
 				message: "invalid type",
 			}),
-			side: z
-				.string()
-				.refine((val) => Object.keys(Side).includes(val), { message: "invalid side" }),
-			assetId: z.string().refine((assetId) => assets.some((asset) => asset.id === assetId), {
+			side: z.string().refine((val) => Object.keys(Side).includes(val), { message: "invalid side" }),
+			assetId: z.string().refine((assetId) => isValidAssetId(assetId), {
 				message: "asset does not exist.",
 			}),
 			price: z.coerce.number().optional(),
@@ -22,9 +21,9 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 			leverage: z.coerce.number().int().min(config.leverage_min).max(config.leverage_max),
 		})
 		.transform((data) => {
-			const typeEnum = data.type as Order_Type
-			const sideEnum = data.side as Side
-			const {  type, side, ...rest } = data;
+			const typeEnum = data.type as Order_Type;
+			const sideEnum = data.side as Side;
+			const { type, side, ...rest } = data;
 			return { ...rest, type: typeEnum, side: sideEnum };
 		})
 		.superRefine((obj, ctx) => {
@@ -32,8 +31,7 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 			if (actualLeverage && actualLeverage !== obj.leverage) {
 				ctx.addIssue({
 					code: z.ZodIssueCode.custom,
-					message:
-						"Leverage mismatch: All positions for the same asset must use the same leverage setting.",
+					message: "Leverage mismatch: All positions for the same asset must use the same leverage setting.",
 					path: ["leverage"],
 				});
 			}
@@ -47,7 +45,7 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 					});
 					return;
 				}
-				if(obj.quantity*markPrice < 0.1){
+				if (obj.quantity * markPrice < 0.1) {
 					ctx.addIssue({
 						code: z.ZodIssueCode.custom,
 						message: "Expected order value should be atleast 0.1 USDC",
@@ -57,7 +55,7 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 				}
 				return;
 			} else {
-				if(obj.quantity<=0){
+				if (obj.quantity <= 0) {
 					ctx.addIssue({
 						code: z.ZodIssueCode.custom,
 						message: "Order quantity should be greater than 0.",
@@ -65,7 +63,7 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 					});
 					return;
 				}
-				if(obj.quantity*obj.price < 0.1){
+				if (obj.quantity * obj.price < 0.1) {
 					ctx.addIssue({
 						code: z.ZodIssueCode.custom,
 						message: "Order value should be atleast 0.1 USDC",
@@ -93,7 +91,7 @@ export function getPlaceOrderValidation(userId: User["id"]) {
 }
 
 export function getCancelOrderValidation(userId: User["id"]) {
-	const user = detailedUsersState.get(userId)!;
+	const user = getUser(userId);
 
 	return z.object({
 		id: z.string().refine((id) => user.orders.has(id), {

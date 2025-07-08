@@ -1,5 +1,6 @@
-import { Asset, Order, Position, PrismaClient, PrismaPromise, Resolution, User } from "@/generated/prisma";
+import { Asset, Order, Order_Status, Position, PrismaClient, PrismaPromise, Resolution, Trade, User } from "@/generated/prisma";
 import { Candle } from "./types";
+import { OrderWithRequiredPrice } from "../common/types";
 
 const prisma = new PrismaClient();
 export default prisma;
@@ -17,16 +18,16 @@ export function appendUserBalanceInDB(userId: User["id"], amount: number) {
 	});
 }
 
-export function liquidateUserInDB(userId: User["id"]){
-    return prisma.user.update({
-        where: {
-            id: userId,
-        },
-        data: {
-            usdc: 0,
-            funding_unpaid: 0
-        }
-    })
+export function liquidateUserInDB(userId: User["id"]) {
+	return prisma.user.update({
+		where: {
+			id: userId,
+		},
+		data: {
+			usdc: 0,
+			funding_unpaid: 0,
+		},
+	});
 }
 
 export function addPositionToDB(position: Position) {
@@ -63,48 +64,120 @@ export function addOrderToDB(order: Order) {
 	});
 }
 
-export function updateOrderInDB(order: Order){
-    return prisma.order.update({
-        where: {
-            id: order.id
-        },
-        data: order
+export function updateOrderInDB(order: Order) {
+	return prisma.order.update({
+		where: {
+			id: order.id,
+		},
+		data: order,
+	});
+}
+
+export function addTradeToDB(trade: Trade){
+    return prisma.trade.create({
+        data: trade,
     })
 }
 
-export function updateLatestCandleToDB(assetId: Asset["id"], resolution: Resolution, candle: Candle ){
-    return prisma.historical_Data.upsert({
+export async function getOpenOrdersByAssetFromDB(asset: Asset) {
+	return (await prisma.order.findMany({
+		where: {
+			status: {
+				in: ["OPEN"],
+			},
+			asset,
+		},
+	})) as OrderWithRequiredPrice[];
+}
+
+export async function getAllOpenOrdersFromDB(){
+    return await prisma.order.findMany({
         where: {
-            assetId_resolution_timestamp: {
-                assetId,
-                resolution,
-                timestamp: candle.timestamp,
-            },
+            status: Order_Status.OPEN,
         },
-        update: {
-            open: candle.open,
-            high: candle.high,
-            low: candle.low,
-            close: candle.close,
-            volume: candle.volume,
+    });
+}
+
+export async function getLatestCandleFromDB(assetId: Asset["id"], resolution: Resolution){
+    return await prisma.historical_Data.findFirst({
+        select: {
+            timestamp: true,
+            open: true,
+            high: true,
+            low: true,
+            close: true,
+            volume: true,
         },
-        create: {
+        where: {
             assetId,
             resolution,
-            timestamp: candle.timestamp,
-            open: candle.open,
-            high: candle.high,
-            low: candle.low,
-            close: candle.close,
-            volume: candle.volume,
         },
-    })
+        orderBy: {
+            timestamp: "desc",
+        },
+    }) as Candle;
 }
 
-export async function getAssetsFromDB(){
-    return await prisma.asset.findMany();
+export function updateLatestCandleToDB(assetId: Asset["id"], resolution: Resolution, candle: Candle) {
+	return prisma.historical_Data.upsert({
+		where: {
+			assetId_resolution_timestamp: {
+				assetId,
+				resolution,
+				timestamp: candle.timestamp,
+			},
+		},
+		update: {
+			open: candle.open,
+			high: candle.high,
+			low: candle.low,
+			close: candle.close,
+			volume: candle.volume,
+		},
+		create: {
+			assetId,
+			resolution,
+			timestamp: candle.timestamp,
+			open: candle.open,
+			high: candle.high,
+			low: candle.low,
+			close: candle.close,
+			volume: candle.volume,
+		},
+	});
 }
 
-export async function pushToDatabase(databaseActions: Array<() => PrismaPromise<any>>){
-    await prisma.$transaction(databaseActions.map((fn) => fn()));
+export function getUsersWithPositionsFromDB(){
+    return prisma.user.findMany({
+		omit: {
+			password: true,
+		},
+		include: {
+			positions: true,
+		},
+	});
+}
+
+export function getAssetsFromDB() {
+	return prisma.asset.findMany();
+}
+
+export async function pushToDatabase(databaseActions: Array<() => PrismaPromise<any>>) {
+	await prisma.$transaction(databaseActions.map((fn) => fn()));
+}
+
+export async function depositInDB(userId: User["id"], amount: number) {
+	await prisma.user.update({
+		where: {
+			id: userId,
+		},
+		data: {
+			total_deposit: {
+				increment: amount,
+			},
+			usdc: {
+				increment: amount,
+			},
+		},
+	});
 }

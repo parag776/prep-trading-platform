@@ -1,41 +1,15 @@
 "use client";
-import axios from "axios";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Button from "./Button";
 import TransactionButton from "./TransactionButton";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode} from "react";
 import UserMenu from "./UserMenu";
+import { useDeposit, useWithdraw } from "@/lib/frontend/hooks/accountHooks";
 
 function Navbar({ img }: { img: string }) {
 	const session = useSession();
-    
-    const [userBalance, setUserBalance] = useState(0);
-
-    async function fetchUserBalance(){
-        const {data} = await axios.get("/api/balance");
-        const balance = data.usdc
-        setUserBalance(balance);
-    }
-
-    useEffect(()=>{
-        if(session.status==="authenticated"){
-            fetchUserBalance();
-        }
-    }, [session.status])
-
-	async function deposit(amount: number) {
-		await axios.post("/api/deposit", {
-			amount,
-		});
-        await fetchUserBalance();
-	}
-
-	async function withdraw(amount: number) {
-		await axios.post("/api/deposit", {
-			amount: -amount,
-		});
-        await fetchUserBalance();
-	}
+	const deposit = useDeposit();
+	const withdraw = useWithdraw();
 
 	const unAuthenticatedJSX = (
 		<div className="cursor-pointer">
@@ -52,7 +26,7 @@ function Navbar({ img }: { img: string }) {
 			    <TransactionButton type={"withdraw"} callback={withdraw} />
             </div>
             <div className="z-100">
-                <UserMenu userBalance={userBalance}/>
+                <UserMenu/>
             </div>
 		</div>
 	);

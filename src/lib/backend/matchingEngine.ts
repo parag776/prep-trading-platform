@@ -1,27 +1,42 @@
 import { Asset, Order, Order_Status, Position, Side, Trade, User } from "@/generated/prisma";
 import { calculateMarginAndCheckLiquidity } from "./marginRequirement";
-import { detailedUsersState, latestCandles, orderbooks } from "./store";
 import { AppError, ErrorType } from "../common/error";
 import config from "../../../config.json";
-import { adjustCandle, calculateFee, calculateMaintenanceMargin, calculateMarginWithFee, calculateMarginWithoutFee, calculateUserPnl, getLatestCandle, printOrderbook } from "./utils";
+import { calculateFee, calculateMaintenanceMargin, calculateMarginWithFee, calculateMarginWithoutFee, calculateUserPnl } from "./utils";
 import { OrderBook } from "./types";
-import prisma, { addOrderToDB, addPositionToDB, appendUserBalanceInDB, deletePositionFromDB, updateLatestCandleToDB, updateOrderInDB, updatePositionInDB } from "./database";
+import { addOrderToDB, addPositionToDB, addTradeToDB, appendUserBalanceInDB, deletePositionFromDB, updateLatestCandleToDB, updateOrderInDB, updatePositionInDB } from "./database";
 import { v4 as uuid } from "uuid";
 import { resolutionInfo } from "../common/data";
 import { databaseActions } from "./exchangeController";
 import { addAccountMetricResponse, addOrderDiffResponse, addOrderbookDiffResponse, addPositionResponse, addTradeResponse } from "./webSockets/utils";
 import { OrderWithRequiredPrice } from "../common/types";
+import {
+	addOrderToUser,
+	adjustInitialMargin,
+	adjustMaintainanceMargin,
+	adjustOrderMargin,
+	removePositionFromUser,
+	getOrderOfUser,
+	getPositionOfUser,
+	getUser,
+	removeOrderFromUser,
+	addPositionToUser,
+	adjustUsdc,
+} from "./store/userStore";
+import { addOrderToOrderbook, getOrderbook, printOrderbook, removeOrderFromOrderbook } from "./store/orderbookStore";
+import { adjustCandle, getLatestCandle } from "./store/candleStore";
 
 // createOrder(order, orderbook, orderPrice, remainingQuantity, average_filled_price)
 
-function createOrder(order: Order, average_filled_price: number, filled_quantity: number, orderbook: OrderBook) {
+function createOrder(order: OrderWithRequiredPrice, average_filled_price: number, filled_quantity: number, orderbook: OrderBook) {
 	const remaining_quantity = order.quantity - order.filled_quantity;
 	if (order.price && remaining_quantity) {
 		// updated userMargin
 		const margin = calculateMarginWithFee(order.price, remaining_quantity, order.leverage, config.maker_fee);
-		const user = detailedUsersState.get(order.userId)!;
 
-		user.orderMargin += margin;
+		const user = getUser(order.userId);
+
+		adjustOrderMargin(user, margin);
 		addAccountMetricResponse(user);
 
 		//order
@@ -29,13 +44,13 @@ function createOrder(order: Order, average_filled_price: number, filled_quantity
 		order.average_filled_price = average_filled_price;
 
 		// updated user orders
-		user.orders.set(order.id, order as OrderWithRequiredPrice);
+		addOrderToUser(user, order);
 
 		// added order to orderbook
 		if (order.side === Side.ASK) {
-			orderbook.askOrderbook.orders = orderbook.askOrderbook.orders.insert(order as OrderWithRequiredPrice, null);
+			orderbook.askOrderbook.orders = orderbook.askOrderbook.orders.insert(order, null);
 		} else {
-			orderbook.bidOrderbook.orders = orderbook.bidOrderbook.orders.insert(order as OrderWithRequiredPrice, null);
+			orderbook.bidOrderbook.orders = orderbook.bidOrderbook.orders.insert(order, null);
 		}
 
 		addOrderbookDiffResponse(order.assetId, order.side, order.price, remaining_quantity);
@@ -50,20 +65,15 @@ function createOrder(order: Order, average_filled_price: number, filled_quantity
 
 // please remember this order object has come from the user and not from the main order object.
 function decreaseOrder(userId: User["id"], orderId: Order["id"], fill: number) {
-	const user = detailedUsersState.get(userId)!;
-	const order = user.orders.get(orderId)!;
+	const user = getUser(userId);
+	const order = getOrderOfUser(user, orderId);
 	const margin = calculateMarginWithFee(order.price, fill, order.leverage, config.maker_fee);
 	// reducing order margin
-	user.orderMargin -= margin;
-	addAccountMetricResponse(user);
+	adjustOrderMargin(user, -margin);
 
 	// removing order from orderbook and user.
-	if (order.side === Side.ASK) {
-		orderbooks.get(order.assetId)?.askOrderbook.orders!.remove(order);
-	} else {
-		orderbooks.get(order.assetId)?.bidOrderbook.orders!.remove(order);
-	}
-	user.orders.delete(order.id);
+	removeOrderFromOrderbook(order);
+	removeOrderFromUser(user, orderId);
 
 	const total_filled_quantity = order.filled_quantity + fill;
 	const average_filled_price = (order.filled_quantity * order.average_filled_price + fill * order.price) / total_filled_quantity;
@@ -73,47 +83,42 @@ function decreaseOrder(userId: User["id"], orderId: Order["id"], fill: number) {
 
 	if (total_filled_quantity !== order.quantity) {
 		// adding back order in orderbook and user.
-		if (order.side === Side.ASK) {
-			orderbooks.get(order.assetId)?.askOrderbook.orders!.insert(order, null);
-		} else {
-			orderbooks.get(order.assetId)?.bidOrderbook.orders!.insert(order, null);
-		}
-		user.orders.set(order.id, order);
+		addOrderToOrderbook(order);
+		addOrderToUser(user, order);
 	} else {
 		// other wise order is filled.
 		order.status = Order_Status.FILLED;
 	}
 
 	// giving responses and update in db.
+
 	// (-) because we are reducing quantity.
 	addOrderbookDiffResponse(order.assetId, order.side, order.price, -fill);
+	addAccountMetricResponse(getUser(userId));
 	addOrderDiffResponse(order);
 	databaseActions.push(() => updateOrderInDB(order));
 }
 
 export function cancelOrder(userId: User["id"], orderId: Order["id"]) {
-	const user = detailedUsersState.get(userId)!;
-	const order = user.orders.get(orderId)!;
+	const user = getUser(userId);
+	const order = getOrderOfUser(user, orderId);
 	const remaining_quantity = order.quantity - order.filled_quantity;
 	const margin = calculateMarginWithFee(order.price, remaining_quantity, order.leverage, config.maker_fee);
 	// reducing order margin
-	user.orderMargin -= margin;
-	addAccountMetricResponse(user);
+	adjustOrderMargin(user, -margin);
 
 	// removing order from orderbook and user.
-	if (order.side === Side.ASK) {
-		orderbooks.get(order.assetId)?.askOrderbook.orders!.remove(order);
-	} else {
-		orderbooks.get(order.assetId)?.bidOrderbook.orders!.remove(order);
-	}
-	user.orders.delete(order.id);
+	removeOrderFromOrderbook(order);
+	removeOrderFromUser(user, orderId);
 
 	// other wise order is filled.
 	order.status = Order_Status.CANCELLED;
 
 	// giving responses and update in db.
+
 	// (-) because we are reducing quantity.
 	addOrderbookDiffResponse(order.assetId, order.side, order.price, -remaining_quantity);
+	addAccountMetricResponse(getUser(userId));
 	addOrderDiffResponse(order);
 	databaseActions.push(() => updateOrderInDB(order));
 }
@@ -138,45 +143,40 @@ function makeTrade(price: number, quantity: number, assetId: string, buyerId: Us
 		}
 	}
 
-	databaseActions.push(() =>
-		prisma.trade.create({
-			data: trade,
-		})
-	);
+	databaseActions.push(() => addTradeToDB(trade));
 
 	addTradeResponse(trade);
 }
 
 function closeLiquidatedPosition(userId: User["id"], assetId: Asset["id"]) {
-	const user = detailedUsersState.get(userId)!;
-	const position = user.positions.get(assetId)!;
+	const user = getUser(userId);
+	const position = getPositionOfUser(user, assetId);
 
 	position.quantity = 0;
 	position.average_price = 0;
 	position.updatedAt = new Date(Date.now());
 
+	// deleting the state.
+	removePositionFromUser(user, assetId);
+
 	// now since the position is 0 remove the position from position Array;
 	databaseActions.push(() => deletePositionFromDB(position));
 	addPositionResponse(position);
-
-	// deleting the state.
-	user.positions.delete(assetId);
 }
 
 function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quantity: number, price: number, leverage: number, is_maker: boolean) {
-	const user = detailedUsersState.get(userId)!;
-	const position = user.positions.get(assetId);
-
+	const user = getUser(userId);
+	const position = getPositionOfUser(user, assetId);
 	// taking fee
 	const fee = calculateFee(price, quantity, leverage, is_maker ? config.maker_fee : config.taker_fee);
-	user.usdc -= fee;
+	adjustUsdc(user, fee);
 	addAccountMetricResponse(user);
 	databaseActions.push(() => appendUserBalanceInDB(user.id, -fee));
 
 	// case where position did not exist already.
 	if (!position) {
-		user.maintenanceMargin += calculateMaintenanceMargin(price, quantity);
-		user.initialMargin += calculateMarginWithoutFee(quantity, price, leverage);
+		adjustMaintainanceMargin(user, calculateMaintenanceMargin(price, quantity));
+		adjustInitialMargin(user, calculateMarginWithoutFee(quantity, price, leverage));
 		addAccountMetricResponse(user);
 
 		const newPosition: Position = {
@@ -190,7 +190,7 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 			createdAt: new Date(Date.now()),
 			updatedAt: new Date(Date.now()),
 		};
-		user.positions.set(assetId, newPosition);
+		addPositionToUser(user, newPosition);
 		databaseActions.push(() => addPositionToDB(newPosition));
 		addPositionResponse(newPosition);
 		return;
@@ -202,8 +202,8 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 
 	// case where we are just adding to the position.
 	if (position.side === side) {
-		user.initialMargin += calculateMarginWithoutFee(quantity, price, leverage);
-		user.maintenanceMargin += calculateMaintenanceMargin(price, quantity);
+		adjustMaintainanceMargin(user, calculateMaintenanceMargin(price, quantity));
+		adjustInitialMargin(user, calculateMarginWithoutFee(quantity, price, leverage));
 
 		const new_quantity = position.quantity + quantity;
 		const new_average_price = (position.average_price * position.quantity + price * quantity) / new_quantity;
@@ -221,12 +221,12 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 	// remaining cases are only those where position is being made to the opposite direction.
 	if (position.quantity > quantity) {
 		// reducing earlier margin that was already added.
-		user.initialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
-		user.maintenanceMargin -= calculateMaintenanceMargin(quantity, position.average_price);
+		adjustMaintainanceMargin(user, -calculateMaintenanceMargin(position.average_price, quantity));
+		adjustInitialMargin(user, -calculateMarginWithoutFee(quantity, position.average_price, leverage));
 
 		// adding profit
 		const profit = quantity * (price - position.average_price);
-		user.usdc += profit;
+		adjustUsdc(user, profit);
 		databaseActions.push(() => appendUserBalanceInDB(user.id, profit));
 
 		// price will be same
@@ -238,12 +238,12 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 		addAccountMetricResponse(user);
 	} else if (position.quantity === quantity) {
 		// reducing earlier margin that was already added.
-		user.initialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
-		user.maintenanceMargin -= calculateMaintenanceMargin(quantity, position.average_price);
+		adjustMaintainanceMargin(user, -calculateMaintenanceMargin(position.average_price, quantity));
+		adjustInitialMargin(user, -calculateMarginWithoutFee(quantity, position.average_price, leverage));
 
 		// adding profit
 		const profit = quantity * (price - position.average_price);
-		user.usdc += profit;
+		adjustUsdc(user, profit);
 		databaseActions.push(() => appendUserBalanceInDB(user.id, profit));
 
 		position.quantity = 0;
@@ -256,21 +256,22 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 		addAccountMetricResponse(user);
 
 		// deleting the state.
-		user.positions.delete(assetId);
+		removePositionFromUser(user, assetId);
 	} else {
 		const oppositeQuantity = quantity - position.quantity;
 
 		// first removing initial margin
-		user.initialMargin -= calculateMarginWithoutFee(quantity, position.average_price, leverage);
-		user.maintenanceMargin -= calculateMaintenanceMargin(quantity, position.average_price);
+		adjustMaintainanceMargin(user, -calculateMaintenanceMargin(position.average_price, quantity));
+		adjustInitialMargin(user, -calculateMarginWithoutFee(quantity, position.average_price, leverage));
 
 		// then adding the margin created by opposite position.
-		user.initialMargin += calculateMarginWithoutFee(quantity, price, leverage);
-		user.maintenanceMargin += calculateMaintenanceMargin(quantity, price);
+		
+		adjustMaintainanceMargin(user, calculateMaintenanceMargin(price, oppositeQuantity));
+		adjustInitialMargin(user, calculateMarginWithoutFee(oppositeQuantity, price, leverage));
 
 		// adding profit for the position that is closed,
 		const profit = quantity * (price - position.average_price);
-		user.usdc += profit;
+		adjustUsdc(user, profit);
 		databaseActions.push(() => appendUserBalanceInDB(user.id, profit));
 
 		position.quantity = oppositeQuantity;
@@ -285,11 +286,9 @@ function makePosition(userId: User["id"], assetId: Asset["id"], side: Side, quan
 }
 
 export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
-	const user = detailedUsersState.get(order.userId)!;
+	const user = getUser(order.userId);
 	// this is checking if enough liquidity is present to process the order..else throw an error.
 	const marginRequired = calculateMarginAndCheckLiquidity(order);
-
-
 
 	if (!isLiquidation) {
 		const accountEquity = user.usdc - user.funding_unpaid + calculateUserPnl(user);
@@ -299,11 +298,10 @@ export function matchingEngine(order: Order, isLiquidation: Boolean = false) {
 		}
 	}
 
-	let orderbook = orderbooks.get(order.assetId)!;
+	let orderbook = getOrderbook(order.assetId);
 	printOrderbook(orderbook);
-	
-	// orderbook.askOrderbook.orders.
 
+	// orderbook.askOrderbook.orders.
 
 	if (order.side === Side.ASK) {
 		let remainingQuantity = order.quantity;

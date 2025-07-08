@@ -34,6 +34,6 @@
 		".next/types/**/*.ts",
 		"src/lib/backend/dataFetchers/spotFetcher.ts",
 		"prisma/seed/seed.ts"
-	],
+, "src/lib/frontend/hooks"	],
 	"exclude": ["node_modules"]
 }

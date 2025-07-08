@@ -20,7 +20,6 @@ export type OrderSlice = {
     orderHistory: Array<Order> | null;
     updateOrders: (updates: Array<OrderDiffResponse>) => void;
     fetchOrders: () => Promise<void>;
-    getDecimalPrecision: ()=>DecimalPrecision
 };
 
 export type OrderbookSlice = {

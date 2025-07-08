@@ -1,6 +1,6 @@
-import { getOrderbookLite } from "@/lib/backend/utils";
 import { symbolValidation } from "@/lib/backend/validations/miscValidations";
 import { requestWrapper } from "../requestWrapper";
+import { getOrderbookLite } from "@/lib/backend/store/orderbookStore";
 
 export const GET = requestWrapper(async (req: Request) => {
 	const { searchParams } = new URL(req.url);
@@ -8,10 +8,9 @@ export const GET = requestWrapper(async (req: Request) => {
 		symbol: searchParams.get("symbol"),
 	};
 
-	console.log(params); // testing here.
-	const { assetId } = symbolValidation.parse(params);
+	const { asset } = symbolValidation.parse(params);
 
-	const orderbook = getOrderbookLite(assetId);
+	const orderbook = getOrderbookLite(asset.id);
 
 	return new Response(JSON.stringify(orderbook), {
 		status: 200,

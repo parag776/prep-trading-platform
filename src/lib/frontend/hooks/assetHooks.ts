@@ -18,9 +18,9 @@ export const useUpdateAsset = (): AssetSlice["updateCurrentAsset"] => {
 export const useAllAssets = (): Loadable<Array<Asset>> => {
 	const assetMap = useStore((state) => state.assetMap);
 	if (assetMap) {
-		return { status: "ready", data: Array.from(assetMap.values()) };
+		return {status: "ready", data: Array.from(assetMap.values())};
 	} else {
-		return { status: "loading" };
+		return {status: "loading"};
 	}
 };
 
