@@ -9,7 +9,7 @@ import { getDetailedUsersState } from "./userStore";
 
 
 // include here
-async function initializeStore() {
+export async function initializeStore() {
 	await initializeAssets();
 	await initializeLatestCandles();
 	await initializeOrderbooks();
@@ -25,8 +25,3 @@ async function initializeStore() {
 	// getting positions
 }
 
-async function main() {
-	await initializeStore();
-}
-
-await main();

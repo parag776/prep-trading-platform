@@ -7,6 +7,7 @@ import { getUser } from "@/lib/backend/store/userStore";
 // @ts-ignore
 // ignoring ts here. no need for ts here.
 export const GET = requestWrapper((req: Request, userId: User["id"]) => {
+	console.log(getUser(userId))
 	const positions = getUser(userId).positions;
 
 	const positionArray = Array.from(positions.values());

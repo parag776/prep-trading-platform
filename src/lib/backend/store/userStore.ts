@@ -59,9 +59,12 @@ export async function getDetailedUsersState() {
 			addOrder(order);
 		}
 	}
+	
+	console.log(detailedUsersState)
 }
 
 export function getUser(userId: User["id"]): Readonly<UserWithPositionsAndOpenOrders> {
+	console.log(detailedUsersState)
 	const user = detailedUsersState.get(userId);
 	if (!user) {
 		throw new Error(`user with userId -> ${userId} not found.`);
