@@ -7,6 +7,7 @@ import { initializeMarkPrices, initializeSpotPrices } from "./priceStore.js";
 import { getDetailedUsersState } from "./userStore.js";
 import { initializeFundingMechanism } from "../jobs/fundingJob.js";
 import { initializeMarketMaker } from "../jobs/marketMakerJob.js";
+import { initializeOrderCancellationJob } from "../jobs/cancelledOrderCleanupJob.js";
 
 // include here
 export async function initialization() {
@@ -20,4 +21,5 @@ export async function initialization() {
 	streamSpotPrices();
 	initializeFundingMechanism();
 	initializeMarketMaker();
+	initializeOrderCancellationJob();
 }
