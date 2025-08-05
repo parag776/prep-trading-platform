@@ -1,12 +1,12 @@
 import configData from "../../../shared/config.mjs";
 import prisma from "../database.js";
-import { getAllUsers, getDetailedUsersState } from "src/store/userStore.js";
+import { getAllUsers, getDetailedUsersState } from "../store/userStore.js";
 
 export function initializeOrderCancellationJob() {
 	const maxOrders = configData.order_history_size;
 	setInterval(async () => {
 		for (const [userId, user] of getAllUsers()) {
-            
+
 			const ordersToKeep = (
 				await prisma.order.findMany({
 					where: {
