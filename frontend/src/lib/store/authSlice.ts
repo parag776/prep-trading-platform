@@ -3,7 +3,7 @@ import type { StateCreator } from "zustand";
 import type { AuthSlice, Store } from "./types";
 import type { UserIdentity } from "../../../../shared/types.mjs";
 
-export const createAuthSlice: StateCreator<Store, [], [], AuthSlice> = (set, get) => ({
+export const createAuthSlice: StateCreator<Store, [], [], AuthSlice> = (set) => ({
 	authenticationStatus: "unauthenticated",
 	localRegister: async (name: string, username: string, password: string) => {
 		try {

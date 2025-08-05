@@ -6,7 +6,7 @@ import Level from './Level';
 import { getArrayWithKeys } from "../../lib/utils/misc";
 
 
-type CumulativeOrderLiteWithKeys = CumulativeOrderLite & {_key: string}
+// type CumulativeOrderLiteWithKeys = CumulativeOrderLite & {_key: string}
 
 function Orders({orders, side, isSizeInUsdc, decimalPoints}: {orders: CumulativeOrderLite[], side: Side, isSizeInUsdc: boolean, decimalPoints: {price: number, quantity: number}}) {
 

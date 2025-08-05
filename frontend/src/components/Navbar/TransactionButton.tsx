@@ -6,7 +6,7 @@ function TransactionButton({ type, callback }: { type: "deposit" | "withdraw"; c
 	const inputRef = useRef<null | HTMLInputElement>(null);
 	const dialogRef = useRef<null | HTMLDialogElement>(null);
 
-	function onSubmit(e: MouseEvent<HTMLElement>) {
+	function onSubmit() {
 		if (inputRef.current) {
 			callback(Number(inputRef.current.value));
 		}
@@ -16,7 +16,7 @@ function TransactionButton({ type, callback }: { type: "deposit" | "withdraw"; c
 		return {};
 	}
 
-	function onOpen(e: MouseEvent<HTMLElement>) {
+	function onOpen() {
 		if (dialogRef.current) {
 			dialogRef.current.showModal();
 		}

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Loading from "../Loading";
 import Orders from "./Orders";
 import Tooltip from "../utilities/Tooltip";

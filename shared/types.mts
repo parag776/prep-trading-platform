@@ -1,4 +1,4 @@
-import { Asset, Order, Order_Type, Position, Resolution, Side, Trade, User } from "../backend/src/generated/prisma/client.js";
+import {type Asset, type  Order, Order_Type, type Position, Resolution, Side, type Trade, type User } from "../backend/src/generated/prisma/client.js";
 
 export type Prettify<T> = {
 	[K in keyof T]: T[K];

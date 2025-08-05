@@ -1,5 +1,5 @@
 import type { MouseEvent } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import SwitchOrder from "./SwitchOrder";
 import type { Side } from "../../../../backend/src/generated/prisma";
 import Switch from "../Switch";
@@ -35,7 +35,7 @@ function OrderPanel() {
 		);
 	}
 
-	function onOpen(e: MouseEvent<HTMLElement>) {
+	function onOpen() {
 		if (dialogRef.current) {
 			dialogRef.current.showModal();
 		}

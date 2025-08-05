@@ -10,7 +10,7 @@ let socket: WebSocket | null = null;
 let subscribers: Array<Subscriber> = [];
 let subscriptions = new Map<String, number>();
 
-function dateReviver(key: string, value: any) {
+function dateReviver(_: string, value: any) {
 	if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(value)) {
 		return new Date(value);
 	}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useAllAssets, useAllFundingRates, useAsset, useCurrentFundingRate, useFundingRate } from "../../lib/hooks/assetHooks";
+import { useAllAssets, useAsset, useCurrentFundingRate} from "../../lib/hooks/assetHooks";
 import Loading from "../Loading";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import AssetDropdown from "./AssetDropdown";

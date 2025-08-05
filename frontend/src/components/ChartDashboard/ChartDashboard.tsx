@@ -1,4 +1,3 @@
-import React from 'react'
 import { useAsset } from '../../lib/hooks/assetHooks';
 import Loading from '../Loading';
 import Chart from './Chart';

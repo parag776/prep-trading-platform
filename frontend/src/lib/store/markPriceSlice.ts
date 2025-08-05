@@ -83,7 +83,7 @@ export const createMarkPriceSlice: StateCreator<Store, [], [], MarkPriceSlice> =
 				get().updateMarkPrice(asset, markPrice);
 			};
 
-			ws.onopen = (event) => {
+			ws.onopen = () => {
 				markPriceConnections.set(assetId, { ws, subscriptionCount: 1 });
 				retries = 0;
 			};
