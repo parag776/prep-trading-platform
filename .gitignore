@@ -1,0 +1,20 @@
+# OS & Editor specific
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*  # like .env.local, .env.production
+
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+legacy-nextjs/

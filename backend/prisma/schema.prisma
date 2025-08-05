@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// enums
+enum Order_Type {
+  LIMIT
+  MARKET
+}
+
+enum Order_Status {
+  OPEN
+  FILLED
+  CANCELLED
+}
+
+enum Side {
+  ASK
+  BID
+}
+
+enum Resolution {
+  ONE_MINUTE
+  THREE_MINUTE
+  FIVE_MINUTE
+  FIFTEEN_MINUTE
+  THIRTY_MINUTE
+  ONE_HOUR
+  TWO_HOUR
+  FOUR_HOUR
+  SIX_HOUR
+  EIGHT_HOUR
+  TWELVE_HOUR
+  ONE_DAY
+}
+
+// models
+
+model Asset {
+  id              String            @id @default(uuid())
+  symbol          String            @unique
+  name            String
+  trades          Trade[]
+  orders          Order[]
+  positions       Position[]
+  historical_data Historical_Data[]
+}
+
+model User {
+  id             String     @id @default(uuid())
+  name           String
+  username       String?     @unique
+  img_url        String?
+  password       String?
+  total_deposit  Float      @default(0)
+  usdc           Float      @default(0)
+  funding_unpaid Float      @default(0)
+  bought         Trade[]    @relation("bought")
+  sold           Trade[]    @relation("sold")
+  orders         Order[]
+  positions      Position[]
+  
+}
+
+model Trade {
+  id        String   @id @default(uuid())
+  buyerId   String
+  sellerId  String
+  price     Float
+  quantity  Float
+  assetId   String
+  createdAt DateTime @default(now())
+
+  asset  Asset @relation(fields: [assetId], references: [id])
+  buyer  User  @relation(name: "bought", fields: [buyerId], references: [id])
+  seller User  @relation(name: "sold", fields: [sellerId], references: [id])
+
+  @@index([createdAt(sort: Desc)])
+}
+
+// orderbook can be extracted from here open orders.
+model Order {
+  id                   String       @id @default(uuid())
+  type                 Order_Type
+  status               Order_Status
+  side                 Side
+  price                Float?
+  quantity             Float
+  filled_quantity      Float        @default(0)
+  average_filled_price Float        @default(0)
+  assetId              String
+  userId               String
+  leverage             Int
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @default(now())
+
+  asset Asset @relation(fields: [assetId], references: [id])
+  // @@index(type: Hash, [status]) // for getting the order book. // but won't need because only useful incase of crash. at that time, just go through whole table.
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, assetId])
+}
+
+model Position {
+  id            String   @id @default(uuid())
+  userId        String
+  assetId       String
+  side          Side
+  average_price Float
+  quantity      Float
+  leverage      Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+
+  asset Asset @relation(fields: [assetId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([userId, assetId])
+}
+
+// todo create order history. don't need position history.
+// in order history, only show filled and canceled orders.
+
+// ^^^^^^ nevermind won't need it because can be calculated from orders. ^^^^^^^^
+
+// model Fees{
+//   id String @id @default(uuid())
+//   orderId String
+//   isMaker Boolean
+//   isPaid Boolean
+//   amount Float
+
+//   order Order @relation(fields: [orderId], references: [id])
+//   @@index([orderId, isMaker, isPaid], type: Hash)
+// }
+
+// model Funding{
+//   id String @id @default(uuid())
+//   isPaid Boolean
+//   amount Float
+//   createdAt DateTime @default(now())
+
+// }
+
+model Historical_Data {
+  assetId    String
+  resolution Resolution
+  timestamp  DateTime
+  open       Float
+  high       Float
+  low        Float
+  close      Float
+  volume     Float
+  asset      Asset      @relation(fields: [assetId], references: [id])
+
+  @@id([assetId, resolution, timestamp])
+}
+
+// create history, add margins to user, etc. sleep for 20 minutes
