@@ -32,7 +32,7 @@ function OpenOrderPanel() {
 			<tbody className="text-white">
 				{openOrders.data.map((order) => {
 					if (order.quantity > infinitesimal) return <OpenOrderRow key={order.id} order={order} />;
-				})}
+				}).reverse()}
 			</tbody>
 		</table>
 	);
